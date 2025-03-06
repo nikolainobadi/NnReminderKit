@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "NnReminderKit",
     platforms: [
-        .iOS(.v15), .macOS(.v10_15)
+        .iOS(.v15), .macOS(.v11)
     ],
     products: [
         .library(
