@@ -21,6 +21,75 @@ final class NnReminderManagerTests: XCTestCase {
         XCTAssertNil(center.authStatusCompletion)
         XCTAssertNil(center.pendingRequestsCompletion)
     }
+    
+    func test_sets_notification_delegate() {
+        let (sut, center) = makeSUT()
+        
+        sut.setNotificationDelegate(DelegateStub())
+        
+        assertProperty(center.delegate)
+    }
+    
+    func test_requests_auth_permission() {
+        // TODO: -
+    }
+    
+    func test_checks_auth_status_asyncronously() async {
+        // TODO: -
+    }
+    
+    func test_checks_auth_status() {
+        // TODO: -
+    }
+    
+    func test_schedules_daily_reminder() {
+        // TODO: -
+    }
+    
+    func test_schedules_single_weekly_reminder_when_only_one_day_is_included() {
+        // TODO: -
+    }
+    
+    func test_schedules_multiple_weekly_reminders_when_more_than_one_day_is_included() {
+        let (sut, center) = makeSUT()
+        let weeklyReminder = makeWeeklyReminder(daysOfWeek: [.monday, .wednesday, .friday])
+        
+        sut.scheduleRecurringReminder(weeklyReminder)
+        
+        assertPropertyEquality(center.addedRequests.count, expectedProperty: 3)
+    }
+    
+    func test_cancels_all_reminders() {
+        // TODO: -
+    }
+    
+    func test_cancels_daily_reminder() {
+        // TODO: -
+    }
+    
+    func test_cancels_single_weekly_reminder_when_only_one_day_is_included() {
+        // TODO: -
+    }
+    
+    func test_cancels_all_recurring_reminders_when_more_than_one_day_is_included() {
+        // TODO: -
+    }
+    
+    func test_asyncronously_loads_single_pending_weekly_reminder_when_only_one_day_is_included() async {
+        // TODO: -
+    }
+    
+    func test_loads_single_pending_weekly_reminder_when_only_one_day_is_included() {
+        // TODO: -
+    }
+    
+    func test_asyncronously_loads_pending_weekly_reminder_with_multiple_days_when_original_reminder_included_more_than_one_day() async {
+        // TODO: - 
+    }
+    
+    func test_loads_pending_weekly_reminder_with_multiple_days_when_original_reminder_included_more_than_one_day() {
+        // TODO: -
+    }
 }
 
 
@@ -34,11 +103,17 @@ extension NnReminderManagerTests {
         
         return (sut, center)
     }
+    
+    func makeWeeklyReminder(id: String = "WeeklyReminder", title: String = "Reminder", message: String = "test message", hour: Int = 8, minute: Int = 30, daysOfWeek: [DayOfWeek] = []) -> DefaultRecurringReminder {
+        return .init(id: id, title: title, message: message, time: .hourAndMinute(.init(hour: hour, minute: minute)), recurringType: daysOfWeek.isEmpty ? .daily : .weekly(daysOfWeek))
+    }
 }
 
 
 // MARK: - Helper Classes
 extension NnReminderManagerTests {
+    class DelegateStub: NSObject, UNUserNotificationCenterDelegate { }
+    
     class MockCenter: NotifCenter {
         private let throwError: Bool
         private let isAuthorized: Bool

@@ -79,15 +79,16 @@ public extension NnReminderManager {
 
 // MARK: - Load
 public extension NnReminderManager {
-    func loadPendingReminders<R: RecurringReminderInitializable>() async -> [R] {
+    // TODO: - need to figure out a better way to handle this -> might be better to simply use a concrete struct
+    func loadAllPendingReminders<R: RecurringReminderInitializable>() async -> [R] {
         return await withCheckedContinuation { continuation in
-            loadPendingReminders { reminders in
+            loadAllPendingReminders { reminders in
                 continuation.resume(returning: reminders)
             }
         }
     }
     
-    func loadPendingReminders<R: RecurringReminderInitializable>(completion: @escaping ([R]) -> Void) {
+    func loadAllPendingReminders<R: RecurringReminderInitializable>(completion: @escaping ([R]) -> Void) {
         notifCenter.getPendingNotificationRequests { requests in
             var groupedReminders: [String: (reminder: DefaultRecurringReminder, days: Set<DayOfWeek>)] = [:]
             
