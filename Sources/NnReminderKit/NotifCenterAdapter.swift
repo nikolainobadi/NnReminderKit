@@ -22,7 +22,7 @@ extension NotifCenterAdapter: NotifCenter {
         notifCenter.removeAllPendingNotificationRequests()
     }
     
-    func removePendingNotificationRequests(withIdentifiers identifiers: [String]) {
+    func removePendingNotificationRequests(identifiers: [String]) {
         notifCenter.removePendingNotificationRequests(withIdentifiers: identifiers)
     }
     
@@ -34,11 +34,13 @@ extension NotifCenterAdapter: NotifCenter {
         notifCenter.delegate = delegate
     }
     
-    func getNotificationSettings(completionHandler: @escaping (UNNotificationSettings) -> Void) {
-        notifCenter.getNotificationSettings(completionHandler: completionHandler)
+    func getAuthorizationStatus(completion: @escaping (UNAuthorizationStatus) -> Void) {
+        notifCenter.getNotificationSettings {
+            completion($0.authorizationStatus)
+        }
     }
     
-    func getPendingNotificationRequests(completionHandler: @escaping ([UNNotificationRequest]) -> Void) {
-        notifCenter.getPendingNotificationRequests(completionHandler: completionHandler)
+    func getPendingNotificationRequests(completion: @escaping ([UNNotificationRequest]) -> Void) {
+        notifCenter.getPendingNotificationRequests(completionHandler: completion)
     }
 }

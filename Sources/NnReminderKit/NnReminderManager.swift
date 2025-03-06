@@ -7,14 +7,18 @@
 
 import UserNotifications
 
-public enum NnReminderManager {
-    private static var notifCenter: NotifCenter = NotifCenterAdapter()
+public final class NnReminderManager {
+    private let notifCenter: NotifCenter
+    
+    init(notifCenter: NotifCenter) {
+        self.notifCenter = notifCenter
+    }
 }
 
 
 // MARK: - Setup
 public extension NnReminderManager {
-    static func setNotificationDelegate(_ delegate: UNUserNotificationCenterDelegate) {
+    func setNotificationDelegate(_ delegate: UNUserNotificationCenterDelegate) {
         notifCenter.setNotificationDelegate(delegate)
     }
 }
@@ -23,11 +27,11 @@ public extension NnReminderManager {
 // MARK: - Auth
 public extension NnReminderManager {
     @discardableResult
-    static func requestAuthPermission(options: UNAuthorizationOptions) async -> Bool {
+    func requestAuthPermission(options: UNAuthorizationOptions) async -> Bool {
         return (try? await notifCenter.requestAuthorization(options: options)) ?? false
     }
     
-    static func checkForPermissionsWithoutRequest() async -> UNAuthorizationStatus {
+    func checkForPermissionsWithoutRequest() async -> UNAuthorizationStatus {
         return await withCheckedContinuation { continuation in
             checkForPermissionsWithoutRequest { status in
                 continuation.resume(returning: status)
@@ -35,10 +39,10 @@ public extension NnReminderManager {
         }
     }
     
-    static func checkForPermissionsWithoutRequest(completion: @escaping (UNAuthorizationStatus) -> Void) {
-        notifCenter.getNotificationSettings { settings in
+    func checkForPermissionsWithoutRequest(completion: @escaping (UNAuthorizationStatus) -> Void) {
+        notifCenter.getAuthorizationStatus { status in
             DispatchQueue.main.async {
-                completion(settings.authorizationStatus)
+                completion(status)
             }
         }
     }
@@ -47,7 +51,7 @@ public extension NnReminderManager {
 
 // MARK: - Recurring Reminders
 public extension NnReminderManager {
-    static func scheduleRecurringReminder(_ reminder: RecurringReminder) {
+    func scheduleRecurringReminder(_ reminder: RecurringReminder) {
         let content = makeContent(for: reminder)
         
         for triggerInfo in reminder.triggers {
@@ -61,21 +65,21 @@ public extension NnReminderManager {
 
 // MARK: - Cancel
 public extension NnReminderManager {
-    static func cancelAllNotifications() {
+    func cancelAllNotifications() {
         notifCenter.removeAllPendingNotificationRequests()
     }
     
-    static func cancelRecurringReminder(_ reminder: RecurringReminder) {
+    func cancelRecurringReminder(_ reminder: RecurringReminder) {
         let identifiers = reminder.triggers.map({ $0.id })
         
-        notifCenter.removePendingNotificationRequests(withIdentifiers: identifiers)
+        notifCenter.removePendingNotificationRequests(identifiers: identifiers)
     }
 }
 
 
 // MARK: - Load
 public extension NnReminderManager {
-    static func loadPendingReminders<R: RecurringReminderInitializable>() async -> [R] {
+    func loadPendingReminders<R: RecurringReminderInitializable>() async -> [R] {
         return await withCheckedContinuation { continuation in
             loadPendingReminders { reminders in
                 continuation.resume(returning: reminders)
@@ -83,7 +87,7 @@ public extension NnReminderManager {
         }
     }
     
-    static func loadPendingReminders<R: RecurringReminderInitializable>(completion: @escaping ([R]) -> Void) {
+    func loadPendingReminders<R: RecurringReminderInitializable>(completion: @escaping ([R]) -> Void) {
         notifCenter.getPendingNotificationRequests { requests in
             var groupedReminders: [String: (reminder: DefaultRecurringReminder, days: Set<DayOfWeek>)] = [:]
             
@@ -164,15 +168,15 @@ public extension NnReminderManager {
 
 // MARK: - Private Methods
 private extension NnReminderManager {
-    static func makeRecurruringTrigger(_ info: TriggerInfo) -> UNCalendarNotificationTrigger {
+    func makeRecurruringTrigger(_ info: TriggerInfo) -> UNCalendarNotificationTrigger {
         return .init(dateMatching: info.components, repeats: true)
     }
     
-    static func scheduleNotification(id: String, content: UNMutableNotificationContent, trigger: UNNotificationTrigger) {
+    func scheduleNotification(id: String, content: UNMutableNotificationContent, trigger: UNNotificationTrigger) {
         notifCenter.add(.init(identifier: id, content: content, trigger: trigger))
     }
     
-    static func makeContent(for reminder: Reminder) -> UNMutableNotificationContent {
+    func makeContent(for reminder: Reminder) -> UNMutableNotificationContent {
         let content = UNMutableNotificationContent()
         content.title = reminder.title
         content.body = reminder.message
@@ -187,23 +191,15 @@ private extension NnReminderManager {
 }
 
 
-// MARK: - Internal Test Helpers
-internal extension NnReminderManager {
-    static func setNotifCenter(_ notifCenter: NotifCenter) {
-        self.notifCenter = notifCenter
-    }
-}
-
-
 // MARK: - Dependencies
 protocol NotifCenter {
     func add(_ request: UNNotificationRequest)
     func removeAllPendingNotificationRequests()
-    func removePendingNotificationRequests(withIdentifiers identifiers: [String])
+    func removePendingNotificationRequests(identifiers: [String])
     func setNotificationDelegate(_ delegate: UNUserNotificationCenterDelegate)
     func requestAuthorization(options: UNAuthorizationOptions) async throws -> Bool
-    func getNotificationSettings(completionHandler: @escaping (UNNotificationSettings) -> Void)
-    func getPendingNotificationRequests(completionHandler: @escaping ([UNNotificationRequest]) -> Void)
+    func getAuthorizationStatus(completion: @escaping (UNAuthorizationStatus) -> Void)
+    func getPendingNotificationRequests(completion: @escaping ([UNNotificationRequest]) -> Void)
 }
 
 
