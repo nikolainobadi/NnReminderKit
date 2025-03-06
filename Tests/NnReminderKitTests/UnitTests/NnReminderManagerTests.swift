@@ -154,7 +154,7 @@ extension NnReminderManagerTests {
     }
     
     func makeWeeklyReminder(id: String = "WeeklyReminder", title: String = "Reminder", message: String = "test message", hour: Int = 8, minute: Int = 30, daysOfWeek: [DayOfWeek] = []) -> RecurringReminder {
-        return .init(id: id, title: title, message: message, time: .hourAndMinute(.init(hour: hour, minute: minute)), recurringType: daysOfWeek.isEmpty ? .daily : .weekly(daysOfWeek))
+        return .init(id: id, title: title, message: message, time: .createTime(hour: hour, minute: minute)!, recurringType: daysOfWeek.isEmpty ? .daily : .weekly(daysOfWeek))
     }
 }
 
@@ -224,5 +224,14 @@ extension NnReminderManagerTests {
 
             pendingRequestsCompletion(requests)
         }
+    }
+}
+
+extension Date {
+    static func createTime(hour: Int, minute: Int) -> Date? {
+        var components = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+        components.hour = hour
+        components.minute = minute
+        return Calendar.current.date(from: components)
     }
 }

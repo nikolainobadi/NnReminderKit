@@ -92,11 +92,7 @@ public extension NnReminderManager {
             var groupedReminders: [String: (reminder: RecurringReminder, days: Set<DayOfWeek>)] = [:]
             
             for request in requests {
-                guard
-                    let trigger = request.trigger as? UNCalendarNotificationTrigger,
-                    let hour = trigger.dateComponents.hour,
-                    let minute = trigger.dateComponents.minute
-                else {
+                guard let trigger = request.trigger as? UNCalendarNotificationTrigger, let time = Date.fromComponents(trigger.dateComponents) else {
                     continue
                 }
                 
@@ -112,7 +108,6 @@ public extension NnReminderManager {
                     day = DayOfWeek.allCases.first(where: { $0.name == dayName })
                 }
                 
-                let time = ReminderTime.hourAndMinute(HourAndMinute(hour: hour, minute: minute))
                 let recurringType: RecurringType = day == nil ? .daily : .weekly([])
                 
                 let reminder = RecurringReminder(
@@ -187,5 +182,21 @@ fileprivate extension RecurringReminder {
         case .weekly(let daysOfWeek):
             return daysOfWeek.map({ "\(id)_\($0.name)" })
         }
+    }
+}
+
+extension Date {
+    static func fromComponents(_ components: DateComponents) -> Date? {
+        var newComponents = components
+        let now = Date()
+        let calendar = Calendar.current
+
+        // Use the current year, month, and day
+        let currentComponents = calendar.dateComponents([.year, .month, .day], from: now)
+        newComponents.year = currentComponents.year
+        newComponents.month = currentComponents.month
+        newComponents.day = currentComponents.day
+
+        return calendar.date(from: newComponents)
     }
 }
