@@ -28,6 +28,19 @@ public struct RecurringReminder: Reminder {
 }
 
 
+// MARK: - Public Helpers
+public extension RecurringReminder {
+    var displayableTime: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm a"
+        formatter.amSymbol = "AM"
+        formatter.pmSymbol = "PM"
+        
+        return formatter.string(from: time)
+    }
+}
+
+
 // MARK: - Dependencies
 public enum RecurringType {
     case daily, weekly([DayOfWeek])
