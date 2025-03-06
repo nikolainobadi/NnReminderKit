@@ -18,6 +18,10 @@ public final class NnReminderManager {
 
 // MARK: - Setup
 public extension NnReminderManager {
+    convenience init() {
+        self.init(notifCenter: NotifCenterAdapter())
+    }
+    
     func setNotificationDelegate(_ delegate: UNUserNotificationCenterDelegate) {
         notifCenter.setNotificationDelegate(delegate)
     }
