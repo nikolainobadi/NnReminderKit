@@ -52,12 +52,8 @@ public extension NnReminderManager {
 // MARK: - Recurring Reminders
 public extension NnReminderManager {
     func scheduleRecurringReminder(_ reminder: RecurringReminder) {
-        let content = makeContent(for: reminder)
-        
-        for triggerInfo in reminder.triggers {
-            let trigger = makeRecurruringTrigger(triggerInfo)
-            
-            scheduleNotification(id: triggerInfo.id, content: content, trigger: trigger)
+        for request in NotificationRequestFactory.makeRecurringReminderRequests(for: reminder) {
+            notifCenter.add(request)
         }
     }
 }
@@ -79,8 +75,7 @@ public extension NnReminderManager {
 
 // MARK: - Load
 public extension NnReminderManager {
-    // TODO: - need to figure out a better way to handle this -> might be better to simply use a concrete struct
-    func loadAllPendingReminders<R: RecurringReminderInitializable>() async -> [R] {
+    func loadAllPendingReminders() async -> [RecurringReminder] {
         return await withCheckedContinuation { continuation in
             loadAllPendingReminders { reminders in
                 continuation.resume(returning: reminders)
@@ -88,9 +83,9 @@ public extension NnReminderManager {
         }
     }
     
-    func loadAllPendingReminders<R: RecurringReminderInitializable>(completion: @escaping ([R]) -> Void) {
+    func loadAllPendingReminders(completion: @escaping ([RecurringReminder]) -> Void) {
         notifCenter.getPendingNotificationRequests { requests in
-            var groupedReminders: [String: (reminder: DefaultRecurringReminder, days: Set<DayOfWeek>)] = [:]
+            var groupedReminders: [String: (reminder: RecurringReminder, days: Set<DayOfWeek>)] = [:]
             
             for request in requests {
                 guard
@@ -116,7 +111,7 @@ public extension NnReminderManager {
                 let time = ReminderTime.hourAndMinute(HourAndMinute(hour: hour, minute: minute))
                 let recurringType: RecurringType = day == nil ? .daily : .weekly([])
                 
-                let reminder = DefaultRecurringReminder(
+                let reminder = RecurringReminder(
                     id: baseId,
                     title: request.content.title,
                     message: request.content.body,
@@ -141,11 +136,11 @@ public extension NnReminderManager {
                 }
             }
             
-            let reminders: [DefaultRecurringReminder] = groupedReminders.map { (baseId, tuple) in
+            let reminders: [RecurringReminder] = groupedReminders.map { (baseId, tuple) in
                 let reminder = tuple.reminder
                 
                 if !tuple.days.isEmpty {
-                    return DefaultRecurringReminder(
+                    return .init(
                         id: reminder.id,
                         title: reminder.title,
                         message: reminder.message,
@@ -160,34 +155,9 @@ public extension NnReminderManager {
             }
             
             DispatchQueue.main.async {
-                completion(reminders.map { R.init($0) })
+                completion(reminders)
             }
         }
-    }
-}
-
-
-// MARK: - Private Methods
-private extension NnReminderManager {
-    func makeRecurruringTrigger(_ info: TriggerInfo) -> UNCalendarNotificationTrigger {
-        return .init(dateMatching: info.components, repeats: true)
-    }
-    
-    func scheduleNotification(id: String, content: UNMutableNotificationContent, trigger: UNNotificationTrigger) {
-        notifCenter.add(.init(identifier: id, content: content, trigger: trigger))
-    }
-    
-    func makeContent(for reminder: Reminder) -> UNMutableNotificationContent {
-        let content = UNMutableNotificationContent()
-        content.title = reminder.title
-        content.body = reminder.message
-        content.subtitle = reminder.subTitle
-        
-        if reminder.withSound {
-            content.sound = .default
-        }
-        
-        return content
     }
 }
 
@@ -205,17 +175,6 @@ protocol NotifCenter {
 
 
 // MARK: - Extension Dependencies
-fileprivate extension ReminderTime {
-    var timeComponents: DateComponents {
-        switch self {
-        case .date(let date):
-            return Calendar.current.dateComponents([.hour, .minute], from: date)
-        case .hourAndMinute(let hourAndMinute):
-            return .init(hour: hourAndMinute.hour, minute: hourAndMinute.minute)
-        }
-    }
-}
-
 fileprivate extension RecurringReminder {
     var identifierList: [String] {
         switch recurringType {
@@ -223,20 +182,6 @@ fileprivate extension RecurringReminder {
             return [id]
         case .weekly(let daysOfWeek):
             return daysOfWeek.map({ "\(id)_\($0.name)" })
-        }
-    }
-    
-    var triggers: [TriggerInfo] {
-        switch recurringType {
-        case .daily:
-            return [.init(id: id, components: time.timeComponents)]
-        case .weekly(let daysOfWeek):
-            return daysOfWeek.map { day in
-                var components = time.timeComponents
-                components.weekday = day.rawValue
-                
-                return .init(id: "\(id)_\(day.name)", components: components)
-            }
         }
     }
 }

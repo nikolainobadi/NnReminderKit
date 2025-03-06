@@ -1,0 +1,34 @@
+{
+  "configurations" : [
+    {
+      "id" : "5860DDBD-C72C-49C6-8FD9-1C42566D0ABB",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : {
+      "targets" : [
+        {
+          "containerPath" : "container:",
+          "identifier" : "NnReminderKit",
+          "name" : "NnReminderKit"
+        }
+      ]
+    },
+    "testExecutionOrdering" : "random",
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "NnReminderKitTests",
+        "name" : "NnReminderKitTests"
+      }
+    }
+  ],
+  "version" : 1
+}

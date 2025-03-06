@@ -30,16 +30,38 @@ final class NnReminderManagerTests: XCTestCase {
         assertProperty(center.delegate)
     }
     
-    func test_requests_auth_permission() {
-        // TODO: -
+    func test_requests_auth_permission() async {
+        for isAuthorized in [true, false] {
+            let sut = makeSUT(isAuthorized: isAuthorized).sut
+            let granted = await sut.requestAuthPermission(options: [])
+            
+            XCTAssertEqual(granted, isAuthorized)
+        }
     }
     
-    func test_checks_auth_status_asyncronously() async {
-        // TODO: -
+    func test_not_authorized_if_error_is_thrown_during_permission_request() async {
+        let sut = makeSUT(throwError: true, isAuthorized: true).sut
+        let granted = await sut.requestAuthPermission(options: [])
+        
+        XCTAssertFalse(granted)
     }
     
     func test_checks_auth_status() {
-        // TODO: -
+        let (sut, center) = makeSUT()
+        let exp = expectation(description: "waiting for status")
+        let expectedStatus = UNAuthorizationStatus.authorized
+        
+        var fetchedStatus: UNAuthorizationStatus?
+        
+        sut.checkForPermissionsWithoutRequest { status in
+            fetchedStatus = status
+            exp.fulfill()
+        }
+        
+        center.complete(authStatus: expectedStatus)
+        waitForExpectations(timeout: 0.1)
+        
+        assertPropertyEquality(fetchedStatus, expectedProperty: expectedStatus)
     }
     
     func test_schedules_daily_reminder() {
@@ -60,7 +82,11 @@ final class NnReminderManagerTests: XCTestCase {
     }
     
     func test_cancels_all_reminders() {
-        // TODO: -
+        let (sut, center) = makeSUT()
+        
+        sut.cancelAllNotifications()
+        
+        XCTAssert(center.didRemoveAllPendingRequests)
     }
     
     func test_cancels_daily_reminder() {
@@ -72,23 +98,46 @@ final class NnReminderManagerTests: XCTestCase {
     }
     
     func test_cancels_all_recurring_reminders_when_more_than_one_day_is_included() {
-        // TODO: -
-    }
-    
-    func test_asyncronously_loads_single_pending_weekly_reminder_when_only_one_day_is_included() async {
-        // TODO: -
+        let (sut, center) = makeSUT()
+        let daysOfWeek: [DayOfWeek] = [.monday, .wednesday, .friday]
+        let pendingReminder = makeWeeklyReminder(id: "first", daysOfWeek: daysOfWeek)
+        
+        sut.cancelRecurringReminder(pendingReminder)
+        
+        assertPropertyEquality(center.idsToRemove.count, expectedProperty: daysOfWeek.count)
     }
     
     func test_loads_single_pending_weekly_reminder_when_only_one_day_is_included() {
         // TODO: -
     }
     
-    func test_asyncronously_loads_pending_weekly_reminder_with_multiple_days_when_original_reminder_included_more_than_one_day() async {
-        // TODO: - 
-    }
-    
     func test_loads_pending_weekly_reminder_with_multiple_days_when_original_reminder_included_more_than_one_day() {
-        // TODO: -
+        let (sut, center) = makeSUT()
+        let exp = expectation(description: "waiting for reminders")
+        let daysOfWeek: [DayOfWeek] = [.monday, .wednesday, .friday]
+        let pendingReminder = makeWeeklyReminder(id: "first", daysOfWeek: daysOfWeek)
+        let requests = NotificationRequestFactory.makeRecurringReminderRequests(for: pendingReminder)
+        
+        var loadedReminders: [RecurringReminder] = []
+        
+        assertPropertyEquality(requests.count, expectedProperty: daysOfWeek.count)
+        sut.loadAllPendingReminders { reminders in
+            loadedReminders = reminders
+            exp.fulfill()
+        }
+        
+        center.complete(requests: requests)
+        waitForExpectations(timeout: 0.1)
+        assertPropertyEquality(loadedReminders.count, expectedProperty: 1)
+        assertProperty(loadedReminders.first) { [unowned self] reminder in
+            switch reminder.recurringType {
+            case .daily:
+                XCTFail("unexpected type")
+            case .weekly(let loadedDays):
+                XCTAssertEqual(loadedDays.count, 3)
+                assertArray(loadedDays, contains: daysOfWeek)
+            }
+        }
     }
 }
 
@@ -104,7 +153,7 @@ extension NnReminderManagerTests {
         return (sut, center)
     }
     
-    func makeWeeklyReminder(id: String = "WeeklyReminder", title: String = "Reminder", message: String = "test message", hour: Int = 8, minute: Int = 30, daysOfWeek: [DayOfWeek] = []) -> DefaultRecurringReminder {
+    func makeWeeklyReminder(id: String = "WeeklyReminder", title: String = "Reminder", message: String = "test message", hour: Int = 8, minute: Int = 30, daysOfWeek: [DayOfWeek] = []) -> RecurringReminder {
         return .init(id: id, title: title, message: message, time: .hourAndMinute(.init(hour: hour, minute: minute)), recurringType: daysOfWeek.isEmpty ? .daily : .weekly(daysOfWeek))
     }
 }

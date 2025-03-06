@@ -5,7 +5,7 @@
 //  Created by Nikolai Nobadi on 3/5/25.
 //
 
-public protocol Reminder {
+protocol Reminder {
     var id: String { get }
     var title: String { get }
     var message: String { get }
@@ -15,7 +15,7 @@ public protocol Reminder {
 
 
 // MARK: - Default Values
-public extension Reminder {
+extension Reminder {
     var subTitle: String {
         return ""
     }
