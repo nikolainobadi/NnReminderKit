@@ -16,7 +16,7 @@ enum NotificationRequestFactory {
         return .init(identifier: reminder.id, content: content, trigger: trigger)
     }
     
-    static func makeRecurringReminderRequests(for reminder: RecurringReminder) -> [UNNotificationRequest] {
+    static func makeRecurringReminderRequests(for reminder: CalendarReminder) -> [UNNotificationRequest] {
         let content = makeContent(for: reminder)
         
         return reminder.triggers.map {

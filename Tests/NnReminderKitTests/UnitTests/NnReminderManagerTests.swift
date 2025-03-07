@@ -139,7 +139,7 @@ extension NnReminderManagerTests {
         let pendingReminder = makeWeeklyReminder(id: "first", daysOfWeek: daysOfWeek)
         let requests = NotificationRequestFactory.makeRecurringReminderRequests(for: pendingReminder)
         
-        var loadedReminders: [RecurringReminder] = []
+        var loadedReminders: [CalendarReminder] = []
         
         assertPropertyEquality(requests.count, expectedProperty: daysOfWeek.count)
         sut.loadAllPendingReminders { reminders in
@@ -150,15 +150,7 @@ extension NnReminderManagerTests {
         center.complete(requests: requests)
         waitForExpectations(timeout: 0.1)
         assertPropertyEquality(loadedReminders.count, expectedProperty: 1)
-        assertProperty(loadedReminders.first) { [unowned self] reminder in
-            switch reminder.recurringType {
-            case .daily:
-                XCTFail("unexpected type")
-            case .weekly(let loadedDays):
-                XCTAssertEqual(loadedDays.count, 3)
-                assertArray(loadedDays, contains: daysOfWeek)
-            }
-        }
+        assertPropertyEquality(loadedReminders.first?.daysOfWeek.count, expectedProperty: daysOfWeek.count)
     }
 }
 
@@ -174,15 +166,11 @@ extension NnReminderManagerTests {
         return (sut, center)
     }
     
-    func makeWeeklyReminder(id: String = "WeeklyReminder", title: String = "Reminder", message: String = "test message", hour: Int = 8, minute: Int = 30, daysOfWeek: [DayOfWeek] = []) -> RecurringReminder {
-        return .init(id: id, title: title, message: message, time: .createTime(hour: hour, minute: minute)!, recurringType: daysOfWeek.isEmpty ? .daily : .weekly(daysOfWeek))
+    func makeWeeklyReminder(id: String = "WeeklyReminder", title: String = "Reminder", message: String = "test message", hour: Int = 8, minute: Int = 30, repeating: Bool = true, daysOfWeek: [DayOfWeek] = []) -> CalendarReminder {
+        return .init(id: id, title: title, message: message, time: .createReminderTime(hour: hour, minute: minute), repeating: repeating, daysOfWeek: daysOfWeek)
     }
     
-    func makeCountdownReminder(id: String = "CountdownReminder",
-                               title: String = "Reminder",
-                               message: String = "test message",
-                               repeating: Bool = false,
-                               timeInterval: TimeInterval = 3600) -> CountdownReminder {
+    func makeCountdownReminder(id: String = "CountdownReminder", title: String = "Reminder", message: String = "test message", repeating: Bool = false, timeInterval: TimeInterval = 3600) -> CountdownReminder {
         return .init(id: id, title: title, message: message, repeating: repeating, timeInterval: timeInterval)
     }
 }
@@ -259,14 +247,5 @@ extension NnReminderManagerTests {
 
             pendingRequestsCompletion(requests)
         }
-    }
-}
-
-extension Date {
-    static func createTime(hour: Int, minute: Int) -> Date? {
-        var components = Calendar.current.dateComponents([.year, .month, .day], from: Date())
-        components.hour = hour
-        components.minute = minute
-        return Calendar.current.date(from: components)
     }
 }

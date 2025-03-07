@@ -71,14 +71,14 @@ public extension NnReminderManager {
 
 // MARK: - Recurring Reminders
 public extension NnReminderManager {
-    func scheduleRecurringReminder(_ reminder: RecurringReminder) async throws {
+    func scheduleRecurringReminder(_ reminder: CalendarReminder) async throws {
         for request in NotificationRequestFactory.makeRecurringReminderRequests(for: reminder) {
             try await notifCenter.add(request)
         }
     }
     
     // TODO: - this may cause trouble if there are multiple errors
-    func scheduleRecurringReminder(_ reminder: RecurringReminder, completion: ((Error?) -> Void)? = nil) {
+    func scheduleRecurringReminder(_ reminder: CalendarReminder, completion: ((Error?) -> Void)? = nil) {
         for request in NotificationRequestFactory.makeRecurringReminderRequests(for: reminder) {
             notifCenter.add(request, completion: completion)
         }
@@ -92,7 +92,7 @@ public extension NnReminderManager {
         notifCenter.removeAllPendingNotificationRequests()
     }
     
-    func cancelRecurringReminder(_ reminder: RecurringReminder) {
+    func cancelRecurringReminder(_ reminder: CalendarReminder) {
         let identifiers = reminder.triggers.map({ $0.id })
         
         notifCenter.removePendingNotificationRequests(identifiers: identifiers)
@@ -102,7 +102,7 @@ public extension NnReminderManager {
 
 // MARK: - Load
 public extension NnReminderManager {
-    func loadAllPendingReminders() async -> [RecurringReminder] {
+    func loadAllPendingReminders() async -> [CalendarReminder] {
         return await withCheckedContinuation { continuation in
             loadAllPendingReminders { reminders in
                 continuation.resume(returning: reminders)
@@ -110,15 +110,16 @@ public extension NnReminderManager {
         }
     }
     
-    func loadAllPendingReminders(completion: @escaping ([RecurringReminder]) -> Void) {
+    func loadAllPendingReminders(completion: @escaping ([CalendarReminder]) -> Void) {
         notifCenter.getPendingNotificationRequests { requests in
-            var groupedReminders: [String: (reminder: RecurringReminder, days: Set<DayOfWeek>)] = [:]
+            var groupedReminders: [String: (reminder: CalendarReminder, days: Set<DayOfWeek>)] = [:]
             
             for request in requests {
                 guard let trigger = request.trigger as? UNCalendarNotificationTrigger, let time = Date.fromComponents(trigger.dateComponents) else {
                     continue
                 }
                 
+                let repeating = trigger.repeats
                 let idComponents = request.identifier.split(separator: "_")
                 
                 guard let baseId = idComponents.first.map(String.init) else {
@@ -131,16 +132,21 @@ public extension NnReminderManager {
                     day = DayOfWeek.allCases.first(where: { $0.name == dayName })
                 }
                 
-                let recurringType: RecurringType = day == nil ? .daily : .weekly([])
+                var daysOfWeek: Set<DayOfWeek> = []
                 
-                let reminder = RecurringReminder(
+                if let day {
+                    daysOfWeek.insert(day)
+                }
+                
+                let reminder = CalendarReminder(
                     id: baseId,
                     title: request.content.title,
                     message: request.content.body,
                     subTitle: request.content.subtitle,
                     withSound: request.content.sound != nil,
                     time: time,
-                    recurringType: recurringType
+                    repeating: repeating,
+                    daysOfWeek: .init(daysOfWeek)
                 )
                 
                 if var existing = groupedReminders[baseId] {
@@ -158,7 +164,7 @@ public extension NnReminderManager {
                 }
             }
             
-            let reminders: [RecurringReminder] = groupedReminders.map { (baseId, tuple) in
+            let reminders: [CalendarReminder] = groupedReminders.map { (baseId, tuple) in
                 let reminder = tuple.reminder
                 
                 if !tuple.days.isEmpty {
@@ -169,7 +175,8 @@ public extension NnReminderManager {
                         subTitle: reminder.subTitle,
                         withSound: reminder.withSound,
                         time: reminder.time,
-                        recurringType: .weekly(Array(tuple.days))
+                        repeating: tuple.reminder.repeating,
+                        daysOfWeek: Array(tuple.days)
                     )
                 } else {
                     return reminder
@@ -198,14 +205,13 @@ protocol NotifCenter {
 
 
 // MARK: - Extension Dependencies
-fileprivate extension RecurringReminder {
+fileprivate extension CalendarReminder {
     var identifierList: [String] {
-        switch recurringType {
-        case .daily:
+        if daysOfWeek.isEmpty {
             return [id]
-        case .weekly(let daysOfWeek):
-            return daysOfWeek.map({ "\(id)_\($0.name)" })
         }
+        
+        return daysOfWeek.map({ "\(id)_\($0.name)" })
     }
 }
 
