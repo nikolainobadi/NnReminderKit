@@ -43,7 +43,7 @@ private extension NotificationRequestFactory {
     /// Creates a `UNMutableNotificationContent` from a `Reminder`.
     /// - Parameter reminder: A reminder object (`CountdownReminder` or `CalendarReminder`).
     /// - Returns: A configured `UNMutableNotificationContent` with title, message, subtitle, and sound settings.
-    static func makeContent(for reminder: Reminder) -> UNMutableNotificationContent {
+    static func makeContent(for reminder: any Reminder) -> UNMutableNotificationContent {
         let content = UNMutableNotificationContent()
         content.title = reminder.title
         content.body = reminder.message
