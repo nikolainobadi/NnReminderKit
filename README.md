@@ -1,4 +1,10 @@
 # NnReminderKit
+![Swift](https://img.shields.io/badge/Swift-5.9-orange)  
+![Platforms](https://img.shields.io/badge/platforms-iOS%2015%20%2B%20%7C%20macOS%2011%20%2B-blue)
+![License](https://img.shields.io/badge/License-MIT-green)  
+![Release](https://img.shields.io/github/v/release/nikolainobadi/NnReminderKit?refresh=true)  
+  
+
 
 NnReminderKit is a Swift package designed to simplify the scheduling and management of local notifications, including countdown-based and calendar-based reminders. It provides a clean API for handling reminders with support for authorization checks, scheduling, canceling, and retrieving pending reminders.
 
