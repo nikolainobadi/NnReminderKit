@@ -19,6 +19,28 @@ public extension CalendarReminder {
         
         return formatter.string(from: time)
     }
+    
+    /// A computed property that returns a human-readable string representing the selected days of the week.
+    ///
+    /// - If all seven days are selected, it returns `"Every Day"`.
+    /// - If only Saturday and Sunday are selected, it returns `"Weekends"`.
+    /// - If Monday through Friday are selected, it returns `"Weekdays"`.
+    /// - Otherwise, it returns a comma-separated list of the selected days.
+    var dayListText: String {
+        if daysOfWeek.isEmpty || daysOfWeek.count == 7 {
+            return "Every Day"
+        }
+        
+        if daysOfWeek.count == 2, (daysOfWeek.contains(.saturday) && daysOfWeek.contains(.sunday)) {
+            return "Weekends"
+        }
+        
+        if daysOfWeek.count == 5, (!daysOfWeek.contains(.saturday) && !daysOfWeek.contains(.sunday)) {
+            return "Weekdays"
+        }
+        
+        return daysOfWeek.map({ $0.name }).joined(separator: ", ")
+    }
 }
 
 // MARK: - Public Preview Sample Data
