@@ -1,3 +1,10 @@
+//
+//  NotifCenterAdapter.swift
+//
+//
+//  Created by Nikolai Nobadi on 3/5/25.
+//
+
 import UserNotifications
 
 /// An adapter for `UNUserNotificationCenter` that conforms to `NotifCenter`.

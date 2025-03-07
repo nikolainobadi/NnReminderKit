@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  ReminderPermissionRequestViewModifier.swift
 //  
 //
 //  Created by Nikolai Nobadi on 3/6/25.
