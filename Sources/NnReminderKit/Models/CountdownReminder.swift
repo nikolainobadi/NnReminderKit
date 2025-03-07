@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct OneTimeReminder: Reminder {
+public struct CountdownReminder: Reminder {
     public let id: String
     public let title: String
     public let message: String

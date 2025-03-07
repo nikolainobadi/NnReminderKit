@@ -9,7 +9,7 @@ import Foundation
 import UserNotifications
 
 enum NotificationRequestFactory {
-    static func makeOneTimeReminderRequest(for reminder: OneTimeReminder) -> UNNotificationRequest {
+    static func makeCountdownReminderRequest(for reminder: CountdownReminder) -> UNNotificationRequest {
         let content = makeContent(for: reminder)
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: reminder.timeInterval, repeats: reminder.repeating)
         
