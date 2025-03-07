@@ -80,75 +80,86 @@ extension NnReminderManagerTests {
         
         assertPropertyEquality(center.addedRequests.count, expectedProperty: 1)
     }
+    
+    func test_cancels_countdown_reminder() {
+        let (sut, center) = makeSUT()
+        let countdownReminder = makeCountdownReminder()
+        
+        sut.cancelCountdownReminder(countdownReminder)
+        
+        assertPropertyEquality(center.idsToRemove.count, expectedProperty: 1)
+    }
+    
+    func test_loads_countdown_reminders() {
+        let (sut, center) = makeSUT()
+        let exp = expectation(description: "waiting for reminders")
+        let pendingReminder = makeCountdownReminder(id: "countdown_1", timeInterval: 3600)
+        let request = NotificationRequestFactory.makeCountdownReminderRequest(for: pendingReminder)
+        
+        var loadedReminders: [CountdownReminder] = []
+        
+        sut.loadAllCountdownReminders { reminders in
+            loadedReminders = reminders
+            exp.fulfill()
+        }
+        
+        center.complete(requests: [request])
+        waitForExpectations(timeout: 0.1)
+        
+        assertPropertyEquality(loadedReminders.count, expectedProperty: 1)
+        assertPropertyEquality(loadedReminders.first?.timeInterval, expectedProperty: pendingReminder.timeInterval)
+    }
+
 }
 
 
-// MARK: - Recurring Reminders
+// MARK: - Calendar Reminders
 extension NnReminderManagerTests {
-    func test_schedules_daily_reminder() {
-        // TODO: -
-    }
-    
-    func test_schedules_single_weekly_reminder_when_only_one_day_is_included() {
-        // TODO: -
-    }
-    
-    func test_schedules_multiple_weekly_reminders_when_more_than_one_day_is_included() {
+    func test_schedules_calendar_reminder_for_single_day() async throws {
         let (sut, center) = makeSUT()
-        let weeklyReminder = makeWeeklyReminder(daysOfWeek: [.monday, .wednesday, .friday])
+        let calendarReminder = makeCalendarReminder(daysOfWeek: [.monday])
         
-        sut.scheduleRecurringReminder(weeklyReminder)
+        try await sut.scheduleRecurringReminder(calendarReminder)
+        
+        assertPropertyEquality(center.addedRequests.count, expectedProperty: 1)
+    }
+    
+    func test_schedules_calendar_reminder_for_multiple_days() async throws {
+        let (sut, center) = makeSUT()
+        let calendarReminder = makeCalendarReminder(daysOfWeek: [.monday, .wednesday, .friday])
+        
+        try await sut.scheduleRecurringReminder(calendarReminder)
         
         assertPropertyEquality(center.addedRequests.count, expectedProperty: 3)
     }
     
-    func test_cancels_all_reminders() {
+    func test_cancels_calendar_reminder() {
         let (sut, center) = makeSUT()
+        let calendarReminder = makeCalendarReminder(daysOfWeek: [.monday, .wednesday, .friday])
         
-        sut.cancelAllNotifications()
+        sut.cancelCalendarReminder(calendarReminder)
         
-        XCTAssert(center.didRemoveAllPendingRequests)
+        assertPropertyEquality(center.idsToRemove.count, expectedProperty: 3)
     }
     
-    func test_cancels_daily_reminder() {
-        // TODO: -
-    }
-    
-    func test_cancels_single_weekly_reminder_when_only_one_day_is_included() {
-        // TODO: -
-    }
-    
-    func test_cancels_all_recurring_reminders_when_more_than_one_day_is_included() {
-        let (sut, center) = makeSUT()
-        let daysOfWeek: [DayOfWeek] = [.monday, .wednesday, .friday]
-        let pendingReminder = makeWeeklyReminder(id: "first", daysOfWeek: daysOfWeek)
-        
-        sut.cancelRecurringReminder(pendingReminder)
-        
-        assertPropertyEquality(center.idsToRemove.count, expectedProperty: daysOfWeek.count)
-    }
-    
-    func test_loads_single_pending_weekly_reminder_when_only_one_day_is_included() {
-        // TODO: -
-    }
-    
-    func test_loads_pending_weekly_reminder_with_multiple_days_when_original_reminder_included_more_than_one_day() {
+    func test_loads_calendar_reminders() {
         let (sut, center) = makeSUT()
         let exp = expectation(description: "waiting for reminders")
         let daysOfWeek: [DayOfWeek] = [.monday, .wednesday, .friday]
-        let pendingReminder = makeWeeklyReminder(id: "first", daysOfWeek: daysOfWeek)
+        let pendingReminder = makeCalendarReminder(id: "first", daysOfWeek: daysOfWeek)
         let requests = NotificationRequestFactory.makeRecurringReminderRequests(for: pendingReminder)
         
         var loadedReminders: [CalendarReminder] = []
         
         assertPropertyEquality(requests.count, expectedProperty: daysOfWeek.count)
-        sut.loadAllPendingReminders { reminders in
+        sut.loadAllCalendarReminders { reminders in
             loadedReminders = reminders
             exp.fulfill()
         }
         
         center.complete(requests: requests)
         waitForExpectations(timeout: 0.1)
+        
         assertPropertyEquality(loadedReminders.count, expectedProperty: 1)
         assertPropertyEquality(loadedReminders.first?.daysOfWeek.count, expectedProperty: daysOfWeek.count)
     }
@@ -166,7 +177,7 @@ extension NnReminderManagerTests {
         return (sut, center)
     }
     
-    func makeWeeklyReminder(id: String = "WeeklyReminder", title: String = "Reminder", message: String = "test message", hour: Int = 8, minute: Int = 30, repeating: Bool = true, daysOfWeek: [DayOfWeek] = []) -> CalendarReminder {
+    func makeCalendarReminder(id: String = "WeeklyReminder", title: String = "Reminder", message: String = "test message", hour: Int = 8, minute: Int = 30, repeating: Bool = true, daysOfWeek: [DayOfWeek] = []) -> CalendarReminder {
         return .init(id: id, title: title, message: message, time: .createReminderTime(hour: hour, minute: minute), repeating: repeating, daysOfWeek: daysOfWeek)
     }
     

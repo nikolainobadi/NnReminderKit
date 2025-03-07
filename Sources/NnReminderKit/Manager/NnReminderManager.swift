@@ -53,6 +53,14 @@ public extension NnReminderManager {
 }
 
 
+// MARK: - Cancel
+public extension NnReminderManager {
+    func cancelAllReminders() {
+        notifCenter.removeAllPendingNotificationRequests()
+    }
+}
+
+
 // MARK: - Countdown Reminders
 public extension NnReminderManager {
     func scheduleCountdownReminder(_ reminder: CountdownReminder) async throws {
@@ -66,10 +74,48 @@ public extension NnReminderManager {
         
         notifCenter.add(request, completion: completion)
     }
+    
+    func cancelCountdownReminder(_ reminder: CountdownReminder) {
+        notifCenter.removePendingNotificationRequests(identifiers: [reminder.id])
+    }
+    
+    func loadAllCountdownReminders() async -> [CountdownReminder] {
+        return await withCheckedContinuation { continuation in
+            loadAllCountdownReminders { reminders in
+                continuation.resume(returning: reminders)
+            }
+        }
+    }
+    
+    func loadAllCountdownReminders(completion: @escaping ([CountdownReminder]) -> Void) {
+        notifCenter.getPendingNotificationRequests { requests in
+            var reminders: [CountdownReminder] = []
+            
+            for request in requests {
+                guard let trigger = request.trigger as? UNTimeIntervalNotificationTrigger else {
+                    continue
+                }
+                
+                let reminder = CountdownReminder(
+                    id: request.identifier,
+                    title: request.content.title,
+                    message: request.content.body,
+                    repeating: trigger.repeats,
+                    timeInterval: trigger.timeInterval
+                )
+                
+                reminders.append(reminder)
+            }
+            
+            DispatchQueue.main.async {
+                completion(reminders)
+            }
+        }
+    }
 }
 
 
-// MARK: - Recurring Reminders
+// MARK: - Calendar Reminders
 public extension NnReminderManager {
     func scheduleRecurringReminder(_ reminder: CalendarReminder) async throws {
         for request in NotificationRequestFactory.makeRecurringReminderRequests(for: reminder) {
@@ -83,34 +129,22 @@ public extension NnReminderManager {
             notifCenter.add(request, completion: completion)
         }
     }
-}
-
-
-// MARK: - Cancel
-public extension NnReminderManager {
-    func cancelAllNotifications() {
-        notifCenter.removeAllPendingNotificationRequests()
-    }
     
-    func cancelRecurringReminder(_ reminder: CalendarReminder) {
+    func cancelCalendarReminder(_ reminder: CalendarReminder) {
         let identifiers = reminder.triggers.map({ $0.id })
         
         notifCenter.removePendingNotificationRequests(identifiers: identifiers)
     }
-}
-
-
-// MARK: - Load
-public extension NnReminderManager {
-    func loadAllPendingReminders() async -> [CalendarReminder] {
+    
+    func loadAllCalendarReminders() async -> [CalendarReminder] {
         return await withCheckedContinuation { continuation in
-            loadAllPendingReminders { reminders in
+            loadAllCalendarReminders { reminders in
                 continuation.resume(returning: reminders)
             }
         }
     }
     
-    func loadAllPendingReminders(completion: @escaping ([CalendarReminder]) -> Void) {
+    func loadAllCalendarReminders(completion: @escaping ([CalendarReminder]) -> Void) {
         notifCenter.getPendingNotificationRequests { requests in
             var groupedReminders: [String: (reminder: CalendarReminder, days: Set<DayOfWeek>)] = [:]
             
@@ -215,7 +249,7 @@ fileprivate extension CalendarReminder {
     }
 }
 
-extension Date {
+fileprivate extension Date {
     static func fromComponents(_ components: DateComponents) -> Date? {
         var newComponents = components
         let now = Date()
