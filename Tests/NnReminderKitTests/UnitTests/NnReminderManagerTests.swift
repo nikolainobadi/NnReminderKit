@@ -179,7 +179,13 @@ extension NnReminderManagerTests {
             self.isAuthorized = isAuthorized
         }
         
-        func add(_ request: UNNotificationRequest) {
+        func add(_ request: UNNotificationRequest) async throws {
+            if throwError { throw NSError(domain: "Test", code: 0) }
+            
+            addedRequests.insert(request)
+        }
+        
+        func add(_ request: UNNotificationRequest, completion: ((Error?) -> Void)?) {
             addedRequests.insert(request)
         }
         

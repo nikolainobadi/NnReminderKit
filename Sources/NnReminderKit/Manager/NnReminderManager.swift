@@ -53,11 +53,34 @@ public extension NnReminderManager {
 }
 
 
+// MARK: - One-time Reminders
+public extension NnReminderManager {
+    func scheduleOneTimeReminder(_ reminder: OneTimeReminder) async throws {
+        let request = NotificationRequestFactory.makeOneTimeReminderRequest(for: reminder)
+        
+        try await notifCenter.add(request)
+    }
+    
+    func scheduleOneTimeReminder(_ reminder: OneTimeReminder, completion: ((Error?) -> Void)? = nil) {
+        let request = NotificationRequestFactory.makeOneTimeReminderRequest(for: reminder)
+        
+        notifCenter.add(request, completion: completion)
+    }
+}
+
+
 // MARK: - Recurring Reminders
 public extension NnReminderManager {
-    func scheduleRecurringReminder(_ reminder: RecurringReminder) {
+    func scheduleRecurringReminder(_ reminder: RecurringReminder) async throws {
         for request in NotificationRequestFactory.makeRecurringReminderRequests(for: reminder) {
-            notifCenter.add(request)
+            try await notifCenter.add(request)
+        }
+    }
+    
+    // TODO: - this may cause trouble if there are multiple errors
+    func scheduleRecurringReminder(_ reminder: RecurringReminder, completion: ((Error?) -> Void)? = nil) {
+        for request in NotificationRequestFactory.makeRecurringReminderRequests(for: reminder) {
+            notifCenter.add(request, completion: completion)
         }
     }
 }
@@ -163,10 +186,11 @@ public extension NnReminderManager {
 
 // MARK: - Dependencies
 protocol NotifCenter {
-    func add(_ request: UNNotificationRequest)
     func removeAllPendingNotificationRequests()
+    func add(_ request: UNNotificationRequest) async throws
     func removePendingNotificationRequests(identifiers: [String])
     func setNotificationDelegate(_ delegate: UNUserNotificationCenterDelegate)
+    func add(_ request: UNNotificationRequest, completion: ((Error?) -> Void)?)
     func requestAuthorization(options: UNAuthorizationOptions) async throws -> Bool
     func getAuthorizationStatus(completion: @escaping (UNAuthorizationStatus) -> Void)
     func getPendingNotificationRequests(completion: @escaping ([UNNotificationRequest]) -> Void)

@@ -14,8 +14,12 @@ final class NotifCenterAdapter {
 
 // MARK: - NotifCenter
 extension NotifCenterAdapter: NotifCenter {
-    func add(_ request: UNNotificationRequest) {
-        notifCenter.add(request)
+    func add(_ request: UNNotificationRequest) async throws {
+        try await notifCenter.add(request)
+    }
+    
+    func add(_ request: UNNotificationRequest, completion: ((Error?) -> Void)?) {
+        notifCenter.add(request, withCompletionHandler: completion)
     }
     
     func removeAllPendingNotificationRequests() {

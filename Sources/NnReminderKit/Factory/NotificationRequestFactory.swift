@@ -9,8 +9,11 @@ import Foundation
 import UserNotifications
 
 enum NotificationRequestFactory {
-    static func makeRequest(id: String, content: UNNotificationContent, trigger: UNNotificationTrigger) -> UNNotificationRequest {
-        return .init(identifier: id, content: content, trigger: trigger)
+    static func makeOneTimeReminderRequest(for reminder: OneTimeReminder) -> UNNotificationRequest {
+        let content = makeContent(for: reminder)
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: reminder.timeInterval, repeats: reminder.repeating)
+        
+        return .init(identifier: reminder.id, content: content, trigger: trigger)
     }
     
     static func makeRecurringReminderRequests(for reminder: RecurringReminder) -> [UNNotificationRequest] {
