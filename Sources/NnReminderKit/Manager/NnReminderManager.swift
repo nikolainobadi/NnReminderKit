@@ -55,13 +55,13 @@ public extension NnReminderManager {
 
 // MARK: - Countdown Reminders
 public extension NnReminderManager {
-    func scheduleOneTimeReminder(_ reminder: CountdownReminder) async throws {
+    func scheduleCountdownReminder(_ reminder: CountdownReminder) async throws {
         let request = NotificationRequestFactory.makeCountdownReminderRequest(for: reminder)
         
         try await notifCenter.add(request)
     }
     
-    func scheduleOneTimeReminder(_ reminder: CountdownReminder, completion: ((Error?) -> Void)? = nil) {
+    func scheduleCountdownReminder(_ reminder: CountdownReminder, completion: ((Error?) -> Void)? = nil) {
         let request = NotificationRequestFactory.makeCountdownReminderRequest(for: reminder)
         
         notifCenter.add(request, completion: completion)

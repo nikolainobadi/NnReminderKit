@@ -21,7 +21,11 @@ final class NnReminderManagerTests: XCTestCase {
         XCTAssertNil(center.authStatusCompletion)
         XCTAssertNil(center.pendingRequestsCompletion)
     }
-    
+}
+
+
+// MARK: - Setup & Auth
+extension NnReminderManagerTests {
     func test_sets_notification_delegate() {
         let (sut, center) = makeSUT()
         
@@ -63,7 +67,24 @@ final class NnReminderManagerTests: XCTestCase {
         
         assertPropertyEquality(fetchedStatus, expectedProperty: expectedStatus)
     }
-    
+}
+
+
+// MARK: - Countdown Reminders
+extension NnReminderManagerTests {
+    func test_schedules_countdown_reminder() async throws {
+        let (sut, center) = makeSUT()
+        let countdownReminder = makeCountdownReminder(timeInterval: 3600)
+        
+        try await sut.scheduleCountdownReminder(countdownReminder)
+        
+        assertPropertyEquality(center.addedRequests.count, expectedProperty: 1)
+    }
+}
+
+
+// MARK: - Recurring Reminders
+extension NnReminderManagerTests {
     func test_schedules_daily_reminder() {
         // TODO: -
     }
@@ -155,6 +176,14 @@ extension NnReminderManagerTests {
     
     func makeWeeklyReminder(id: String = "WeeklyReminder", title: String = "Reminder", message: String = "test message", hour: Int = 8, minute: Int = 30, daysOfWeek: [DayOfWeek] = []) -> RecurringReminder {
         return .init(id: id, title: title, message: message, time: .createTime(hour: hour, minute: minute)!, recurringType: daysOfWeek.isEmpty ? .daily : .weekly(daysOfWeek))
+    }
+    
+    func makeCountdownReminder(id: String = "CountdownReminder",
+                               title: String = "Reminder",
+                               message: String = "test message",
+                               repeating: Bool = false,
+                               timeInterval: TimeInterval = 3600) -> CountdownReminder {
+        return .init(id: id, title: title, message: message, repeating: repeating, timeInterval: timeInterval)
     }
 }
 
