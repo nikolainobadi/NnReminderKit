@@ -39,7 +39,7 @@ public extension CalendarReminder {
             return "Weekdays"
         }
         
-        return daysOfWeek.map({ $0.name }).joined(separator: ", ")
+        return daysOfWeek.sorted(by: { $0.rawValue < $1.rawValue }).map({ $0.name }).joined(separator: ", ")
     }
 }
 
