@@ -54,7 +54,7 @@ public extension View {
     /// - Returns: A modified view that handles notification permission requests.
     func requestReminderPermissions<DetailView: View, DeniedView: View>(
         options: UNAuthorizationOptions = [.alert, .badge, .sound],
-        @ViewBuilder detailView: @escaping (() -> Void) -> DetailView,
+        @ViewBuilder detailView: @escaping (@escaping () -> Void) -> DetailView,
         @ViewBuilder deniedView: @escaping (URL?) -> DeniedView
     ) -> some View {
         modifier(
