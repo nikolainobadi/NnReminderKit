@@ -78,7 +78,7 @@ public extension NnReminderManager {
 }
 
 
-// MARK: - Countdown Reminders
+// MARK: - CountdownReminder
 public extension NnReminderManager {
     /// Schedules a countdown reminder asynchronously.
     ///
@@ -146,43 +146,40 @@ public extension NnReminderManager {
 }
 
 
-// MARK: - Calendar Reminders
+// MARK: - WeekdayReminder
 public extension NnReminderManager {
     /// Schedules a recurring calendar reminder asynchronously.
     ///
-    /// - Parameter reminder: The `CalendarReminder` to schedule.
+    /// - Parameter reminder: The `WeekdayReminder` to schedule.
     /// - Throws: An error if scheduling fails.
-    func scheduleRecurringReminder(_ reminder: CalendarReminder) async throws {
-        for request in NotificationRequestFactory.makeRecurringReminderRequests(for: reminder) {
-            try await notifCenter.add(request)
-        }
+    func scheduleRecurringReminder(_ reminder: WeekdayReminder) async throws {
+        try await scheduleMultiTriggerReminder(reminder)
     }
     
     /// Schedules a recurring calendar reminder with a completion handler.
     ///
     /// - Parameters:
-    ///   - reminder: The `CalendarReminder` to schedule.
+    ///   - reminder: The `WeekdayReminder` to schedule.
     ///   - completion: A closure receiving an optional error if scheduling fails.
-    func scheduleRecurringReminder(_ reminder: CalendarReminder, completion: ((Error?) -> Void)? = nil) {
-        for request in NotificationRequestFactory.makeRecurringReminderRequests(for: reminder) {
+    func scheduleRecurringReminder(_ reminder: WeekdayReminder, completion: ((Error?) -> Void)? = nil) {
+        for request in NotificationRequestFactory.makeMultiTriggerReminderRequests(for: reminder) {
             notifCenter.add(request, completion: completion)
         }
     }
     
     /// Cancels a specific calendar reminder.
     ///
-    /// - Parameter reminder: The `CalendarReminder` to cancel.
-    func cancelCalendarReminder(_ reminder: CalendarReminder) {
-        let identifiers = reminder.triggers.map({ $0.id })
-        notifCenter.removePendingNotificationRequests(identifiers: identifiers)
+    /// - Parameter reminder: The `WeekdayReminder` to cancel.
+    func cancelCalendarReminder(_ reminder: WeekdayReminder) {
+        cancelMultiTriggerReminder(reminder)
     }
     
     /// Loads all pending calendar reminders asynchronously.
     ///
-    /// - Returns: An array of `CalendarReminder` objects.
-    func loadAllCalendarReminders() async -> [CalendarReminder] {
+    /// - Returns: An array of `WeekdayReminder` objects.
+    func loadAllWeekdayReminders() async -> [WeekdayReminder] {
         return await withCheckedContinuation { continuation in
-            loadAllCalendarReminders { reminders in
+            loadAllWeekdayReminders { reminders in
                 continuation.resume(returning: reminders)
             }
         }
@@ -190,10 +187,10 @@ public extension NnReminderManager {
     
     /// Loads all pending calendar reminders.
     ///
-    /// - Parameter completion: A closure receiving an array of `CalendarReminder` objects.
-    func loadAllCalendarReminders(completion: @escaping ([CalendarReminder]) -> Void) {
+    /// - Parameter completion: A closure receiving an array of `WeekdayReminder` objects.
+    func loadAllWeekdayReminders(completion: @escaping ([WeekdayReminder]) -> Void) {
         notifCenter.getPendingNotificationRequests { requests in
-            var groupedReminders: [String: (reminder: CalendarReminder, days: Set<DayOfWeek>)] = [:]
+            var groupedReminders: [String: (reminder: WeekdayReminder, days: Set<DayOfWeek>)] = [:]
             
             for request in requests {
                 guard let trigger = request.trigger as? UNCalendarNotificationTrigger, let time = Date.fromComponents(trigger.dateComponents) else {
@@ -219,7 +216,7 @@ public extension NnReminderManager {
                     daysOfWeek.insert(day)
                 }
                 
-                let reminder = CalendarReminder(
+                let reminder = WeekdayReminder(
                     id: baseId,
                     title: request.content.title,
                     message: request.content.body,
@@ -242,7 +239,7 @@ public extension NnReminderManager {
             }
             
             let reminders = groupedReminders.map { (_, tuple) in
-                CalendarReminder(
+                WeekdayReminder(
                     id: tuple.reminder.id,
                     title: tuple.reminder.title,
                     message: tuple.reminder.message,
@@ -255,6 +252,102 @@ public extension NnReminderManager {
             }
             
             completion(reminders)
+        }
+    }
+}
+
+
+// MARK: - FutureDateReminder
+public extension NnReminderManager {
+    func scheduleFutureDateReminder(_ reminder: FutureDateReminder) async throws {
+        try await scheduleMultiTriggerReminder(reminder)
+    }
+    
+    func cancelFutureDateReminder(_ reminder: FutureDateReminder) {
+        cancelMultiTriggerReminder(reminder)
+    }
+    
+    func loadAllFutureDateReminders() async -> [FutureDateReminder] {
+        return await withCheckedContinuation { continuation in
+            loadAllFutureDateReminders { reminders in
+                continuation.resume(returning: reminders)
+            }
+        }
+    }
+    
+    func loadAllFutureDateReminders(completion: @escaping ([FutureDateReminder]) -> Void) {
+        notifCenter.getPendingNotificationRequests { requests in
+            var groupedReminders: [String: (reminder: FutureDateReminder, primary: Date?, additional: Set<Date>)] = [:]
+
+            for request in requests {
+                guard let trigger = request.trigger as? UNCalendarNotificationTrigger,
+                      let date = Date.fromComponents(trigger.dateComponents) else {
+                    continue
+                }
+
+                let idComponents = request.identifier.split(separator: "_")
+                guard let baseId = idComponents.first.map(String.init) else {
+                    continue
+                }
+
+                let isPrimary = request.identifier.hasSuffix("_primary")
+
+                let reminder = FutureDateReminder(
+                    id: baseId,
+                    title: request.content.title,
+                    message: request.content.body,
+                    subTitle: request.content.subtitle,
+                    withSound: request.content.sound != nil,
+                    primaryDate: date,
+                    additionalDates: []
+                )
+
+                if var existing = groupedReminders[baseId] {
+                    if isPrimary {
+                        existing.primary = date
+                    } else {
+                        existing.additional.insert(date)
+                    }
+                    groupedReminders[baseId] = existing
+                } else {
+                    groupedReminders[baseId] = (
+                        reminder,
+                        primary: isPrimary ? date : nil,
+                        additional: isPrimary ? [] : [date]
+                    )
+                }
+            }
+
+            let reminders = groupedReminders.compactMap { (_, tuple) -> FutureDateReminder? in
+                guard let primaryDate = tuple.primary else { return nil }
+
+                return FutureDateReminder(
+                    id: tuple.reminder.id,
+                    title: tuple.reminder.title,
+                    message: tuple.reminder.message,
+                    subTitle: tuple.reminder.subTitle,
+                    withSound: tuple.reminder.withSound,
+                    primaryDate: primaryDate,
+                    additionalDates: Array(tuple.additional)
+                )
+            }
+
+            completion(reminders)
+        }
+    }
+}
+
+
+// MARK: - Private Methods
+private extension NnReminderManager {
+    func cancelMultiTriggerReminder(_ reminder: any MultiTriggerReminder) {
+        let identifiers = reminder.triggers.map({ $0.id })
+        notifCenter.removePendingNotificationRequests(identifiers: identifiers)
+    }
+    
+    func scheduleMultiTriggerReminder(_ reminder: any MultiTriggerReminder) async throws {
+        for request in NotificationRequestFactory.makeMultiTriggerReminderRequests(for: reminder) {
+            try await notifCenter.add(request)
         }
     }
 }
@@ -277,8 +370,8 @@ protocol NotifCenter: Sendable {
 
 
 // MARK: - Extension Dependencies
-/// Extension for `CalendarReminder` providing computed properties.
-fileprivate extension CalendarReminder {
+/// Extension for `WeekdayReminder` providing computed properties.
+fileprivate extension WeekdayReminder {
     /// Generates a list of unique identifiers for the reminder.
     ///
     /// - If the reminder is not associated with specific days, it returns a single identifier.

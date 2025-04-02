@@ -1,12 +1,12 @@
 //
-//  CalendarReminder+Extensions.swift
+//  WeekdayReminder+Extensions.swift
 //
 //  Created by Nikolai Nobadi on 3/7/25.
 //
 
 import Foundation
 
-public extension CalendarReminder {
+public extension WeekdayReminder {
     /// Returns the reminder's time in a human-readable format.
     ///
     /// - Format: `h:mm AM/PM`
@@ -44,13 +44,13 @@ public extension CalendarReminder {
 }
 
 // MARK: - Public Preview Sample Data
-public extension CalendarReminder {
+public extension WeekdayReminder {
     /// Returns a sample `CalendarReminder` for preview purposes.
-    static var sample: CalendarReminder {
+    static var sample: WeekdayReminder {
         return makeSample(daysOfWeek: [.monday, .wednesday, .friday])
     }
 
-    /// Creates a sample `CalendarReminder` with customizable properties.
+    /// Creates a sample `WeekdayReminder` with customizable properties.
     ///
     /// - Parameters:
     ///   - id: The unique identifier for the reminder.
@@ -59,7 +59,7 @@ public extension CalendarReminder {
     ///   - time: The scheduled time for the reminder.
     ///   - repeating: Whether the reminder repeats.
     ///   - daysOfWeek: The days of the week the reminder should trigger.
-    /// - Returns: A configured `CalendarReminder` instance.
+    /// - Returns: A configured `WeekdayReminder` instance.
     static func makeSample(
         id: String = "reminderId",
         title: String = "Preview Title",
@@ -67,7 +67,7 @@ public extension CalendarReminder {
         time: Date = .init(),
         repeating: Bool = true,
         daysOfWeek: [DayOfWeek] = []
-    ) -> CalendarReminder {
+    ) -> WeekdayReminder {
         return .init(
             id: id,
             title: title,
@@ -80,8 +80,8 @@ public extension CalendarReminder {
         )
     }
 
-    /// Returns a list of sample `CalendarReminder` instances for preview purposes.
-    static var sampleList: [CalendarReminder] {
+    /// Returns a list of sample `WeekdayReminder` instances for preview purposes.
+    static var sampleList: [WeekdayReminder] {
         return [
             makeSample(id: "0", time: .createReminderTime(), daysOfWeek: [.monday, .wednesday]),
             makeSample(id: "1", time: .createReminderTime(hour: 12), daysOfWeek: [.friday]),
