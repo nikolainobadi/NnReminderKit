@@ -31,6 +31,7 @@ enum NotificationRequestFactory {
     }
 }
 
+
 // MARK: - Private Methods
 private extension NotificationRequestFactory {
     /// Creates a `UNCalendarNotificationTrigger` for a `CalendarReminder`.
