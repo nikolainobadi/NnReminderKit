@@ -2,22 +2,31 @@ name: CI
 
 on:
   pull_request:
-    branches: 
+    branches:
       - main
 
 jobs:
-  test:
+  build:
     runs-on: macos-14
 
     steps:
-      - name: Checkout code
+      - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Select Xcode 16
-        run: sudo xcode-select -s /Applications/Xcode_16.app
+      - name: Select Xcode 16.2
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
 
-      - name: Confirm Swift version
+      - name: Display Xcode Version
+        run: xcodebuild -version
+
+      - name: Display Swift Version
         run: swift --version
 
-      - name: Run tests
-        run: swift test 
+      - name: Clean
+        run: swift clean
+        
+      - name: Build
+        run: swift build
+
+      - name: Run Tests
+        run: swift test
