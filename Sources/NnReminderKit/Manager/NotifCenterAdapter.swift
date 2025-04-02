@@ -11,9 +11,11 @@ import UserNotifications
 ///
 /// This class provides a wrapper around `UNUserNotificationCenter` to allow easier dependency injection and testing.
 final class NotifCenterAdapter {
-    /// The shared instance of `UNUserNotificationCenter`.
-    private let notifCenter = UNUserNotificationCenter.current()
+    private var notifCenter: UNUserNotificationCenter {
+        return .current()
+    }
 }
+
 
 // MARK: - NotifCenter
 extension NotifCenterAdapter: NotifCenter {

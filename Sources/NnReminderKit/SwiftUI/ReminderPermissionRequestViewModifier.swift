@@ -19,10 +19,14 @@ struct ReminderPermissionRequestViewModifier<DetailView: View, DeniedView: View>
         case .authorized, .provisional:
             content
         case .notDetermined:
-            detailView(permissionENV.requestPermission)
-                .onAppear {
-                    permissionENV.checkPermissionStatus()
+            detailView {
+                Task {
+                    await permissionENV.requestPermission()
                 }
+            }
+            .task {
+                await permissionENV.checkPermissionStatus()
+            }
         default:
             #if canImport(UIKit)
                 deniedView(URL(string: UIApplication.openSettingsURLString))
@@ -53,10 +57,12 @@ public extension View {
         @ViewBuilder detailView: @escaping (@escaping () -> Void) -> DetailView,
         @ViewBuilder deniedView: @escaping (URL?) -> DeniedView
     ) -> some View {
-        modifier(ReminderPermissionRequestViewModifier(
-            permissionENV: .init(manager: .init(), options: options),
-            deniedView: deniedView,
-            detailView: detailView
-        ))
+        modifier(
+            ReminderPermissionRequestViewModifier(
+                permissionENV: .init(manager: .init(), options: options),
+                deniedView: deniedView,
+                detailView: detailView
+            )
+        )
     }
 }

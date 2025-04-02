@@ -8,7 +8,7 @@
 import UserNotifications
 
 /// Manages scheduling, canceling, and retrieving reminders using `UserNotifications`.
-public final class NnReminderManager {
+public actor NnReminderManager {
     /// Notification center dependency for handling notifications.
     private let notifCenter: NotifCenter
     
@@ -20,10 +20,11 @@ public final class NnReminderManager {
     }
 }
 
+
 // MARK: - Setup
 public extension NnReminderManager {
     /// Default initializer using `NotifCenterAdapter` for interacting with `UserNotifications`.
-    convenience init() {
+    init() {
         self.init(notifCenter: NotifCenterAdapter())
     }
     
@@ -34,6 +35,7 @@ public extension NnReminderManager {
         notifCenter.setNotificationDelegate(delegate)
     }
 }
+
 
 // MARK: - Auth
 public extension NnReminderManager {
@@ -62,9 +64,7 @@ public extension NnReminderManager {
     /// - Parameter completion: A closure receiving the current `UNAuthorizationStatus`.
     func checkForPermissionsWithoutRequest(completion: @escaping (UNAuthorizationStatus) -> Void) {
         notifCenter.getAuthorizationStatus { status in
-            DispatchQueue.main.async {
-                completion(status)
-            }
+            completion(status)
         }
     }
 }
@@ -76,6 +76,7 @@ public extension NnReminderManager {
         notifCenter.removeAllPendingNotificationRequests()
     }
 }
+
 
 // MARK: - Countdown Reminders
 public extension NnReminderManager {
@@ -139,12 +140,11 @@ public extension NnReminderManager {
                 reminders.append(reminder)
             }
             
-            DispatchQueue.main.async {
-                completion(reminders)
-            }
+            completion(reminders)
         }
     }
 }
+
 
 // MARK: - Calendar Reminders
 public extension NnReminderManager {
@@ -254,20 +254,17 @@ public extension NnReminderManager {
                 )
             }
             
-            DispatchQueue.main.async {
-                completion(reminders)
-            }
+            completion(reminders)
         }
     }
 }
-
 
 
 // MARK: - Dependencies
 /// A protocol defining interactions with the notification system.
 ///
 /// This abstraction allows for dependency injection and testing by enabling the use of a mock notification center.
-protocol NotifCenter {
+protocol NotifCenter: Sendable {
     func removeAllPendingNotificationRequests()
     func add(_ request: UNNotificationRequest) async throws
     func removePendingNotificationRequests(identifiers: [String])
@@ -318,4 +315,3 @@ fileprivate extension Date {
         return calendar.date(from: newComponents)
     }
 }
-

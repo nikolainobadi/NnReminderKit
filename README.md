@@ -1,7 +1,7 @@
 # NnReminderKit
-![Swift](https://img.shields.io/badge/Swift-5.9-orange)
-![Platforms](https://img.shields.io/badge/platforms-iOS%2015%20%2B%20%7C%20macOS%2011%20%2B-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
+![Swift Version](https://badgen.net/badge/swift/6.0%2B/purple)
+![Platforms](https://img.shields.io/badge/platforms-iOS%2017%20%2B%20%7C%20macOS%2012%20%2B-blue)
+![License](https://img.shields.io/badge/license-MIT-lightgray)
   
 
 
@@ -37,7 +37,7 @@ Add the following dependency to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/nikolainobadi/NnReminderKit", from: "0.5.0")
+    .package(url: "https://github.com/nikolainobadi/NnReminderKit", from: "1.0.0")
 ]
 ```
 Or, add it via Xcode:  
@@ -45,7 +45,7 @@ Or, add it via Xcode:
 2. Go to **File > Add Packages**.  
 3. Enter the repository URL:  
    https://github.com/nikolainobadi/NnReminderKit  
-4. Select **Up to Next Major Version** and enter `0.5.0`.  
+4. Select **Up to Next Major Version** and enter `1.0.0`.  
 5. Click **Add Package**.  
 
 ## Usage
@@ -77,7 +77,6 @@ struct NotificationSetupView: View {
                         // will be nil on macOS
                         if let url = settingsURL {
                             Button("Open Settings") {
-                                
                                 UIApplication.shared.open(url)
                             }
                         }
@@ -88,7 +87,6 @@ struct NotificationSetupView: View {
 }
 
 ``` 
-
 
 ### Manual Requesting Notification Permissions
 Alternatively, you can manually request permissions with `NnReminderManager` directly.
@@ -101,7 +99,6 @@ Task {
 }
 
 ```
-
 
 ### Scheduling a Countdown Reminder
 Schedule a one-time reminder that triggers after a specified time interval:  
@@ -184,9 +181,10 @@ try await reminderManager.scheduleRecurringReminder(weekendReminder)
 You can cancel individual reminders or all pending notifications:  
 
 ```swift
-reminderManager.cancelCountdownReminder(countdownReminder)
-reminderManager.cancelCalendarReminder(calendarReminder)
-reminderManager.cancelAllReminders() // Cancels all pending reminders
+// await is necessary as NnReminderManager is an actor
+await reminderManager.cancelCountdownReminder(countdownReminder)
+await reminderManager.cancelCalendarReminder(calendarReminder)
+await reminderManager.cancelAllReminders() // Cancels all pending reminders
 ```
 
 ### Loading Pending Reminders

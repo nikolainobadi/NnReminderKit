@@ -1,4 +1,4 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 6.0
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "NnReminderKit",
     platforms: [
-        .iOS(.v15), .macOS(.v11)
+        .iOS(.v17), .macOS(.v12)
     ],
     products: [
         .library(
@@ -14,7 +14,6 @@ let package = Package(
             targets: ["NnReminderKit"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/nikolainobadi/NnTestKit", from: "1.1.0"),
     ],
     targets: [
         .target(
@@ -22,9 +21,8 @@ let package = Package(
         .testTarget(
             name: "NnReminderKitTests",
             dependencies: [
-                "NnReminderKit",
-                .product(name: "NnTestHelpers", package: "NnTestKit")
+                "NnReminderKit"
             ]
-        ),
+        )
     ]
 )

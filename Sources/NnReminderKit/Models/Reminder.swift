@@ -5,7 +5,7 @@
 //
 
 /// A protocol representing a general reminder with basic notification properties.
-protocol Reminder: Identifiable {
+protocol Reminder: Identifiable, Sendable {
     /// A unique identifier for the reminder.
     var id: String { get }
     

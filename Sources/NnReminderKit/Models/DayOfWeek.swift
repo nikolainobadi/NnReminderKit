@@ -16,7 +16,7 @@ import Foundation
 /// - Thursday = 5
 /// - Friday = 6
 /// - Saturday = 7
-public enum DayOfWeek: Int, CaseIterable, Identifiable {
+public enum DayOfWeek: Int, CaseIterable, Identifiable, Sendable {
     case sunday = 1, monday, tuesday, wednesday, thursday, friday, saturday
 
     /// Unique identifier for `Identifiable` conformance.
