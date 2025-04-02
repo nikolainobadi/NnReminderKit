@@ -12,7 +12,7 @@ enum TriggerInfoFactory {
         var results: [TriggerInfo] = []
 
         let primary = TriggerInfo(
-            id: "\(reminder.id)_\(reminder.primaryDate.displayableDate)",
+            id: "\(reminder.id)_\(reminder.primaryDate.displayableDate)_primary",
             components: reminder.primaryDate.dateComponents
         )
         results.append(primary)

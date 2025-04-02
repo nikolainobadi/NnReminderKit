@@ -177,9 +177,9 @@ public extension NnReminderManager {
     /// Loads all pending calendar reminders asynchronously.
     ///
     /// - Returns: An array of `WeekdayReminder` objects.
-    func loadAllCalendarReminders() async -> [WeekdayReminder] {
+    func loadAllWeekdayReminders() async -> [WeekdayReminder] {
         return await withCheckedContinuation { continuation in
-            loadAllCalendarReminders { reminders in
+            loadAllWeekdayReminders { reminders in
                 continuation.resume(returning: reminders)
             }
         }
@@ -188,7 +188,7 @@ public extension NnReminderManager {
     /// Loads all pending calendar reminders.
     ///
     /// - Parameter completion: A closure receiving an array of `WeekdayReminder` objects.
-    func loadAllCalendarReminders(completion: @escaping ([WeekdayReminder]) -> Void) {
+    func loadAllWeekdayReminders(completion: @escaping ([WeekdayReminder]) -> Void) {
         notifCenter.getPendingNotificationRequests { requests in
             var groupedReminders: [String: (reminder: WeekdayReminder, days: Set<DayOfWeek>)] = [:]
             
@@ -268,11 +268,72 @@ public extension NnReminderManager {
     }
     
     func loadAllFutureDateReminders() async -> [FutureDateReminder] {
-        return [] // TODO: -
+        return await withCheckedContinuation { continuation in
+            loadAllFutureDateReminders { reminders in
+                continuation.resume(returning: reminders)
+            }
+        }
     }
     
     func loadAllFutureDateReminders(completion: @escaping ([FutureDateReminder]) -> Void) {
-        // TODO: - 
+        notifCenter.getPendingNotificationRequests { requests in
+            var groupedReminders: [String: (reminder: FutureDateReminder, primary: Date?, additional: Set<Date>)] = [:]
+
+            for request in requests {
+                guard let trigger = request.trigger as? UNCalendarNotificationTrigger,
+                      let date = Date.fromComponents(trigger.dateComponents) else {
+                    continue
+                }
+
+                let idComponents = request.identifier.split(separator: "_")
+                guard let baseId = idComponents.first.map(String.init) else {
+                    continue
+                }
+
+                let isPrimary = request.identifier.hasSuffix("_primary")
+
+                let reminder = FutureDateReminder(
+                    id: baseId,
+                    title: request.content.title,
+                    message: request.content.body,
+                    subTitle: request.content.subtitle,
+                    withSound: request.content.sound != nil,
+                    primaryDate: date,
+                    additionalDates: []
+                )
+
+                if var existing = groupedReminders[baseId] {
+                    if isPrimary {
+                        existing.primary = date
+                    } else {
+                        existing.additional.insert(date)
+                    }
+                    groupedReminders[baseId] = existing
+                } else {
+                    groupedReminders[baseId] = (
+                        reminder,
+                        primary: isPrimary ? date : nil,
+                        additional: isPrimary ? [] : [date]
+                    )
+                }
+            }
+
+            let reminders = groupedReminders.compactMap { (_, tuple) -> FutureDateReminder? in
+                guard let primaryDate = tuple.primary else { return nil }
+
+                return FutureDateReminder(
+                    id: tuple.reminder.id,
+                    title: tuple.reminder.title,
+                    message: tuple.reminder.message,
+                    subTitle: tuple.reminder.subTitle,
+                    withSound: tuple.reminder.withSound,
+                    primaryDate: primaryDate,
+                    additionalDates: Array(tuple.additional)
+                )
+            }
+
+            completion(reminders)
+        }
     }
 }
 

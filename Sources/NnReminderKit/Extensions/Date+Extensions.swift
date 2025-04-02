@@ -14,11 +14,7 @@ public extension Date {
     ///   - minute: The minute component (default: `0`).
     ///   - date: The reference date (default: `Date()`).
     /// - Returns: A `Date` object with the specified time.
-    static func createReminderTime(
-        hour: Int = 8,
-        minute: Int = 0,
-        date: Date = .init()
-    ) -> Date {
+    static func createReminderTime(hour: Int = 8, minute: Int = 0, date: Date = .init()) -> Date {
         var components = Calendar.current.dateComponents([.year, .month, .day], from: date)
         components.hour = hour
         components.minute = minute

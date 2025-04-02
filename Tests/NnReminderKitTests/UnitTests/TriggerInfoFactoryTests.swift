@@ -16,7 +16,7 @@ struct TriggerInfoFactoryTests {
         let triggers = TriggerInfoFactory.makeTriggers(for: reminder)
         
         #expect(triggers.count == 1)
-        #expect(triggers.first?.id == "\(reminder.id)_\(reminder.primaryDate.displayableDate)")
+        #expect(triggers.first?.id == "\(reminder.id)_\(reminder.primaryDate.displayableDate)_primary")
     }
 
     @Test("Creates multiple triggers for FutureDateReminder with additional dates")
@@ -29,6 +29,7 @@ struct TriggerInfoFactoryTests {
         let triggers = TriggerInfoFactory.makeTriggers(for: reminder)
         
         #expect(triggers.count == 1 + additional.count)
+        #expect(triggers.contains { $0.id == "\(reminder.id)_\(reminder.primaryDate.displayableDate)_primary" })
         #expect(triggers.contains { $0.id == "\(reminder.id)_\(additional[0].displayableDate)" })
         #expect(triggers.contains { $0.id == "\(reminder.id)_\(additional[1].displayableDate)" })
     }

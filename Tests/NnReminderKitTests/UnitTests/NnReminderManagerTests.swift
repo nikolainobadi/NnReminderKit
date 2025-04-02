@@ -134,12 +134,61 @@ extension NnReminderManagerTests {
         let pendingReminder = makeWeekdayReminder(id: "first", daysOfWeek: daysOfWeek)
         let requests = NotificationRequestFactory.makeMultiTriggerReminderRequests(for: pendingReminder)
         let sut = makeSUT(pendingRequests: requests).sut
-        let loadedReminders = await sut.loadAllCalendarReminders()
+        let loadedReminders = await sut.loadAllWeekdayReminders()
         let reminder = try #require(loadedReminders.first)
         
         #expect(requests.count == daysOfWeek.count)
         #expect(loadedReminders.count == 1)
         #expect(reminder.daysOfWeek.count == daysOfWeek.count)
+    }
+}
+
+
+// MARK: - FutureDateReminder
+extension NnReminderManagerTests {
+    @Test("Schedules a FutureDateReminder with multiple dates")
+    func schedulesFutureDateReminder() async throws {
+        let (sut, center) = makeSUT()
+        let reminder = makeFutureDateReminder(additionalDates: [
+            Date.createReminderTime(hour: 10),
+            Date.createReminderTime(hour: 12)
+        ])
+
+        try await sut.scheduleFutureDateReminder(reminder)
+
+        #expect(center.addedRequests.count == 3)
+    }
+
+    @Test("Cancels a FutureDateReminder")
+    func cancelsFutureDateReminder() async {
+        let (sut, center) = makeSUT()
+        let reminder = makeFutureDateReminder(additionalDates: [
+            Date.createReminderTime(hour: 10),
+            Date.createReminderTime(hour: 12)
+        ])
+
+        await sut.cancelFutureDateReminder(reminder)
+
+        #expect(center.idsToRemove.count == 3)
+    }
+
+    @Test("Loads pending FutureDateReminders")
+    func loadsFutureDateReminders() async throws {
+        let primary = Date.createReminderTime(hour: 9)
+        let additional = [
+            Date.createReminderTime(hour: 10),
+            Date.createReminderTime(hour: 12)
+        ]
+
+        let pendingReminder = makeFutureDateReminder(additionalDates: additional)
+        let requests = NotificationRequestFactory.makeMultiTriggerReminderRequests(for: pendingReminder)
+        let sut = makeSUT(pendingRequests: requests).sut
+        let reminders = await sut.loadAllFutureDateReminders()
+        let loadedReminder = try #require(reminders.first)
+
+        #expect(reminders.count == 1)
+        #expect(loadedReminder.primaryDate.displayableDate == primary.displayableDate)
+        #expect(loadedReminder.additionalDates.count == 2)
     }
 }
 
