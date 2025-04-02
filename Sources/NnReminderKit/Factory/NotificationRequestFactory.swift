@@ -19,10 +19,10 @@ enum NotificationRequestFactory {
         return .init(identifier: reminder.id, content: content, trigger: trigger)
     }
 
-    /// Creates a list of notification requests for a `WeekdayReminder`.
-    /// - Parameter reminder: The `WeekdayReminder` containing title, message, scheduled time, and repeat settings.
+    /// Creates a list of notification requests for a `MultiTriggerReminders`.
+    /// - Parameter reminder: The `MultiTriggerReminder` containing title, message, scheduled time, and repeat settings.
     /// - Returns: An array of `UNNotificationRequest` objects, one for each scheduled trigger.
-    static func makeRecurringReminderRequests(for reminder: WeekdayReminder) -> [UNNotificationRequest] {
+    static func makeMultiTriggerReminderRequests(for reminder: any MultiTriggerReminder) -> [UNNotificationRequest] {
         let content = makeContent(for: reminder)
 
         return reminder.triggers.map {

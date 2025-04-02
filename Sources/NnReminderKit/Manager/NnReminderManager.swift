@@ -78,7 +78,7 @@ public extension NnReminderManager {
 }
 
 
-// MARK: - Countdown Reminders
+// MARK: - CountdownReminder
 public extension NnReminderManager {
     /// Schedules a countdown reminder asynchronously.
     ///
@@ -146,16 +146,14 @@ public extension NnReminderManager {
 }
 
 
-// MARK: - Calendar Reminders
+// MARK: - WeekdayReminder
 public extension NnReminderManager {
     /// Schedules a recurring calendar reminder asynchronously.
     ///
     /// - Parameter reminder: The `WeekdayReminder` to schedule.
     /// - Throws: An error if scheduling fails.
     func scheduleRecurringReminder(_ reminder: WeekdayReminder) async throws {
-        for request in NotificationRequestFactory.makeRecurringReminderRequests(for: reminder) {
-            try await notifCenter.add(request)
-        }
+        try await scheduleMultiTriggerReminder(reminder)
     }
     
     /// Schedules a recurring calendar reminder with a completion handler.
@@ -164,7 +162,7 @@ public extension NnReminderManager {
     ///   - reminder: The `WeekdayReminder` to schedule.
     ///   - completion: A closure receiving an optional error if scheduling fails.
     func scheduleRecurringReminder(_ reminder: WeekdayReminder, completion: ((Error?) -> Void)? = nil) {
-        for request in NotificationRequestFactory.makeRecurringReminderRequests(for: reminder) {
+        for request in NotificationRequestFactory.makeMultiTriggerReminderRequests(for: reminder) {
             notifCenter.add(request, completion: completion)
         }
     }
@@ -173,8 +171,7 @@ public extension NnReminderManager {
     ///
     /// - Parameter reminder: The `WeekdayReminder` to cancel.
     func cancelCalendarReminder(_ reminder: WeekdayReminder) {
-        let identifiers = reminder.triggers.map({ $0.id })
-        notifCenter.removePendingNotificationRequests(identifiers: identifiers)
+        cancelMultiTriggerReminder(reminder)
     }
     
     /// Loads all pending calendar reminders asynchronously.
@@ -255,6 +252,41 @@ public extension NnReminderManager {
             }
             
             completion(reminders)
+        }
+    }
+}
+
+
+// MARK: - FutureDateReminder
+public extension NnReminderManager {
+    func scheduleFutureDateReminder(_ reminder: FutureDateReminder) async throws {
+        try await scheduleMultiTriggerReminder(reminder)
+    }
+    
+    func cancelFutureDateReminder(_ reminder: FutureDateReminder) {
+        cancelMultiTriggerReminder(reminder)
+    }
+    
+    func loadAllFutureDateReminders() async -> [FutureDateReminder] {
+        return [] // TODO: -
+    }
+    
+    func loadAllFutureDateReminders(completion: @escaping ([FutureDateReminder]) -> Void) {
+        // TODO: - 
+    }
+}
+
+
+// MARK: - Private Methods
+private extension NnReminderManager {
+    func cancelMultiTriggerReminder(_ reminder: any MultiTriggerReminder) {
+        let identifiers = reminder.triggers.map({ $0.id })
+        notifCenter.removePendingNotificationRequests(identifiers: identifiers)
+    }
+    
+    func scheduleMultiTriggerReminder(_ reminder: any MultiTriggerReminder) async throws {
+        for request in NotificationRequestFactory.makeMultiTriggerReminderRequests(for: reminder) {
+            try await notifCenter.add(request)
         }
     }
 }

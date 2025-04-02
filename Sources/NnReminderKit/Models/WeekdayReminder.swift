@@ -8,7 +8,7 @@ import Foundation
 
 /// A reminder that is scheduled for a specific time on specific days of the week.
 /// This is typically used for recurring reminders, such as daily or weekly notifications.
-public struct WeekdayReminder: Reminder {
+public struct WeekdayReminder: MultiTriggerReminder {
     /// Unique identifier for the reminder.
     public let id: String
     
@@ -75,15 +75,6 @@ internal extension WeekdayReminder {
     /// - If `daysOfWeek` is empty, a single trigger is created for the `time`.
     /// - Otherwise, multiple triggers are created for each specified day.
     var triggers: [TriggerInfo] {
-        if daysOfWeek.isEmpty {
-            return [.init(id: id, components: timeComponents)]
-        }
-
-        return daysOfWeek.map { day in
-            var components = timeComponents
-            components.weekday = day.rawValue
-
-            return .init(id: "\(id)_\(day.name)", components: components)
-        }
+        return TriggerInfoFactory.makeTriggers(for: self)
     }
 }
