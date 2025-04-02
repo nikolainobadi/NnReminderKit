@@ -19,10 +19,10 @@ enum NotificationRequestFactory {
         return .init(identifier: reminder.id, content: content, trigger: trigger)
     }
 
-    /// Creates a list of notification requests for a `CalendarReminder`.
-    /// - Parameter reminder: The `CalendarReminder` containing title, message, scheduled time, and repeat settings.
+    /// Creates a list of notification requests for a `WeekdayReminder`.
+    /// - Parameter reminder: The `WeekdayReminder` containing title, message, scheduled time, and repeat settings.
     /// - Returns: An array of `UNNotificationRequest` objects, one for each scheduled trigger.
-    static func makeRecurringReminderRequests(for reminder: CalendarReminder) -> [UNNotificationRequest] {
+    static func makeRecurringReminderRequests(for reminder: WeekdayReminder) -> [UNNotificationRequest] {
         let content = makeContent(for: reminder)
 
         return reminder.triggers.map {
@@ -34,7 +34,7 @@ enum NotificationRequestFactory {
 
 // MARK: - Private Methods
 private extension NotificationRequestFactory {
-    /// Creates a `UNCalendarNotificationTrigger` for a `CalendarReminder`.
+    /// Creates a `UNCalendarNotificationTrigger` for a `WeekdayReminder`.
     /// - Parameter info: The `TriggerInfo` containing date components for the scheduled reminder.
     /// - Returns: A `UNCalendarNotificationTrigger` configured for the specified date components.
     static func makeRecurringTrigger(_ info: TriggerInfo) -> UNCalendarNotificationTrigger {
@@ -42,7 +42,7 @@ private extension NotificationRequestFactory {
     }
 
     /// Creates a `UNMutableNotificationContent` from a `Reminder`.
-    /// - Parameter reminder: A reminder object (`CountdownReminder` or `CalendarReminder`).
+    /// - Parameter reminder: A reminder object (`CountdownReminder` or `WeekdayReminder`).
     /// - Returns: A configured `UNMutableNotificationContent` with title, message, subtitle, and sound settings.
     static func makeContent(for reminder: any Reminder) -> UNMutableNotificationContent {
         let content = UNMutableNotificationContent()

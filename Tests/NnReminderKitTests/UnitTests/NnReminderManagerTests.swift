@@ -96,42 +96,42 @@ extension NnReminderManagerTests {
 }
 
 
-// MARK: - Calendar Reminders
+// MARK: - WeekdayReminder
 extension NnReminderManagerTests {
-    @Test("Schedules a calendar reminder for a single day")
-    func test_schedules_calendar_reminder_for_single_day() async throws {
+    @Test("Schedules a WeekdayReminder for a single day")
+    func schedulesSingleDayWeekdayReminder() async throws {
         let (sut, center) = makeSUT()
-        let calendarReminder = makeCalendarReminder(daysOfWeek: [.monday])
+        let calendarReminder = makeWeekdayReminder(daysOfWeek: [.monday])
         
         try await sut.scheduleRecurringReminder(calendarReminder)
         
         #expect(center.addedRequests.count == 1)
     }
     
-    @Test("Schedules a calendar reminder for a multiple days")
-    func test_schedules_calendar_reminder_for_multiple_days() async throws {
+    @Test("Schedules a WeekdayReminder for a multiple days")
+    func schedulesMultipleDayWeekdayReminder() async throws {
         let (sut, center) = makeSUT()
-        let calendarReminder = makeCalendarReminder(daysOfWeek: [.monday, .wednesday, .friday])
+        let calendarReminder = makeWeekdayReminder(daysOfWeek: [.monday, .wednesday, .friday])
         
         try await sut.scheduleRecurringReminder(calendarReminder)
         
         #expect(center.addedRequests.count == 3)
     }
     
-    @Test("Cancels a calendar reminder")
-    func test_cancels_calendar_reminder() async {
+    @Test("Cancels a WeekdayReminder")
+    func cancelWeekdayReminder() async {
         let (sut, center) = makeSUT()
-        let calendarReminder = makeCalendarReminder(daysOfWeek: [.monday, .wednesday, .friday])
+        let calendarReminder = makeWeekdayReminder(daysOfWeek: [.monday, .wednesday, .friday])
         
         await sut.cancelCalendarReminder(calendarReminder)
         
         #expect(center.idsToRemove.count == 3)
     }
     
-    @Test("Loads pending calendar reminders")
-    func test_loads_calendar_reminders() async throws {
+    @Test("Loads pending WeekdayReminders")
+    func loadWeekdayReminders() async throws {
         let daysOfWeek: [DayOfWeek] = [.monday, .wednesday, .friday]
-        let pendingReminder = makeCalendarReminder(id: "first", daysOfWeek: daysOfWeek)
+        let pendingReminder = makeWeekdayReminder(id: "first", daysOfWeek: daysOfWeek)
         let requests = NotificationRequestFactory.makeRecurringReminderRequests(for: pendingReminder)
         let sut = makeSUT(pendingRequests: requests).sut
         let loadedReminders = await sut.loadAllCalendarReminders()
@@ -157,7 +157,7 @@ private extension NnReminderManagerTests {
         return .init(id: id, title: title, message: message, repeating: repeating, timeInterval: timeInterval)
     }
     
-    func makeCalendarReminder(id: String = "WeeklyReminder", title: String = "Reminder", message: String = "test message", hour: Int = 8, minute: Int = 30, repeating: Bool = true, daysOfWeek: [DayOfWeek] = []) -> CalendarReminder {
+    func makeWeekdayReminder(id: String = "WeeklyReminder", title: String = "Reminder", message: String = "test message", hour: Int = 8, minute: Int = 30, repeating: Bool = true, daysOfWeek: [DayOfWeek] = []) -> WeekdayReminder {
         return .init(id: id, title: title, message: message, time: .createReminderTime(hour: hour, minute: minute), repeating: repeating, daysOfWeek: daysOfWeek)
     }
 }

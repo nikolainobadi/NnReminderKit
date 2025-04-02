@@ -1,5 +1,5 @@
 //
-//  CalendarReminder.swift
+//  WeekdayReminder.swift
 //
 //  Created by Nikolai Nobadi on 3/5/25.
 //
@@ -8,7 +8,7 @@ import Foundation
 
 /// A reminder that is scheduled for a specific time on specific days of the week.
 /// This is typically used for recurring reminders, such as daily or weekly notifications.
-public struct CalendarReminder: Reminder {
+public struct WeekdayReminder: Reminder {
     /// Unique identifier for the reminder.
     public let id: String
     
@@ -33,7 +33,7 @@ public struct CalendarReminder: Reminder {
     /// The days of the week on which the reminder should trigger.
     public let daysOfWeek: [DayOfWeek]
 
-    /// Initializes a `CalendarReminder` with the given properties.
+    /// Initializes a `WeekdayReminder` with the given properties.
     /// - Parameters:
     ///   - id: Unique identifier.
     ///   - title: Title of the reminder.
@@ -65,7 +65,7 @@ public struct CalendarReminder: Reminder {
 }
 
 // MARK: - Internal Helpers
-internal extension CalendarReminder {
+internal extension WeekdayReminder {
     /// Extracts the hour and minute from the `time` property.
     var timeComponents: DateComponents {
         return Calendar.current.dateComponents([.hour, .minute], from: time)
