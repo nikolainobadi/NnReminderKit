@@ -12,7 +12,7 @@ struct ReminderPermissionRequestViewModifier<DetailView: View, DeniedView: View>
     @StateObject var permissionENV: ReminderPermissionENV
     
     let deniedView: (URL?) -> DeniedView
-    let detailView: (() -> Void) -> DetailView
+    let detailView: (@escaping () -> Void) -> DetailView
     
     func body(content: Content) -> some View {
         switch permissionENV.status {
