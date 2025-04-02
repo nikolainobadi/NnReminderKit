@@ -37,7 +37,7 @@ Add the following dependency to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/nikolainobadi/NnReminderKit", from: "1.0.0")
+    .package(url: "https://github.com/nikolainobadi/NnReminderKit", branch: "main")
 ]
 ```
 Or, add it via Xcode:  
@@ -45,7 +45,8 @@ Or, add it via Xcode:
 2. Go to **File > Add Packages**.  
 3. Enter the repository URL:  
    https://github.com/nikolainobadi/NnReminderKit  
-4. Select **Up to Next Major Version** and enter `1.0.0`.  
+4. Select **Branch** and enter `main`.  
+<!--4. Select **Up to Next Major Version** and enter `1.0.0`.  -->
 5. Click **Add Package**.  
 
 ## Usage
