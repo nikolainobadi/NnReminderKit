@@ -20,4 +20,8 @@ public extension Date {
         components.minute = minute
         return Calendar.current.date(from: components) ?? date
     }
+    
+    func addingDays(_ days: Int) -> Date {
+        return Calendar.current.date(byAdding: .day, value: days, to: self)!
+    }
 }
