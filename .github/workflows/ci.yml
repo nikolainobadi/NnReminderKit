@@ -22,9 +22,6 @@ jobs:
       - name: Display Swift Version
         run: swift --version
 
-      - name: Clean
-        run: swift clean
-        
       - name: Build
         run: swift build
 
