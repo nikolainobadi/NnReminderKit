@@ -75,6 +75,16 @@ public extension NnReminderManager {
     func cancelAllReminders() {
         notifCenter.removeAllPendingNotificationRequests()
     }
+    
+    func cancelReminders(identifier: UUID) {
+        notifCenter.getPendingNotificationRequests { requests in
+            let matchingIds = requests
+                .map(\.identifier)
+                .filter { $0.hasPrefix(identifier.uuidString) }
+            
+            self.notifCenter.removePendingNotificationRequests(identifiers: matchingIds)
+        }
+    }
 }
 
 
@@ -103,7 +113,7 @@ public extension NnReminderManager {
     ///
     /// - Parameter reminder: The `CountdownReminder` to cancel.
     func cancelCountdownReminder(_ reminder: CountdownReminder) {
-        notifCenter.removePendingNotificationRequests(identifiers: [reminder.id])
+        notifCenter.removePendingNotificationRequests(identifiers: [reminder.id.uuidString])
     }
     
     /// Loads all pending countdown reminders asynchronously.
@@ -125,12 +135,12 @@ public extension NnReminderManager {
             var reminders: [CountdownReminder] = []
             
             for request in requests {
-                guard let trigger = request.trigger as? UNTimeIntervalNotificationTrigger else {
+                guard let id = UUID(uuidString: request.identifier), let trigger = request.trigger as? UNTimeIntervalNotificationTrigger else {
                     continue
                 }
                 
                 let reminder = CountdownReminder(
-                    id: request.identifier,
+                    id: id,
                     title: request.content.title,
                     message: request.content.body,
                     repeating: trigger.repeats,
@@ -190,32 +200,22 @@ public extension NnReminderManager {
     /// - Parameter completion: A closure receiving an array of `WeekdayReminder` objects.
     func loadAllWeekdayReminders(completion: @escaping ([WeekdayReminder]) -> Void) {
         notifCenter.getPendingNotificationRequests { requests in
-            var groupedReminders: [String: (reminder: WeekdayReminder, days: Set<DayOfWeek>)] = [:]
-            
+            var groupedReminders: [UUID: (reminder: WeekdayReminder, days: Set<DayOfWeek>)] = [:]
+
             for request in requests {
-                guard let trigger = request.trigger as? UNCalendarNotificationTrigger, let time = Date.fromComponents(trigger.dateComponents) else {
-                    continue
-                }
-                
+                guard let trigger = request.trigger as? UNCalendarNotificationTrigger,
+                      let time = Date.fromComponents(trigger.dateComponents) else { continue }
+
                 let repeating = trigger.repeats
                 let idComponents = request.identifier.split(separator: "_")
-                
-                guard let baseId = idComponents.first.map(String.init) else {
-                    continue
-                }
-                
-                var day: DayOfWeek? = nil
-                
+                guard let baseIdString = idComponents.first,
+                      let baseId = UUID(uuidString: String(baseIdString)) else { continue }
+
+                var day: DayOfWeek?
                 if idComponents.count > 1, let dayName = idComponents.last {
                     day = DayOfWeek.allCases.first(where: { $0.name == dayName })
                 }
-                
-                var daysOfWeek: Set<DayOfWeek> = []
-                
-                if let day {
-                    daysOfWeek.insert(day)
-                }
-                
+
                 let reminder = WeekdayReminder(
                     id: baseId,
                     title: request.content.title,
@@ -224,23 +224,21 @@ public extension NnReminderManager {
                     withSound: request.content.sound != nil,
                     time: time,
                     repeating: repeating,
-                    daysOfWeek: .init(daysOfWeek)
+                    daysOfWeek: day.map { [$0] } ?? []
                 )
-                
+
                 if var existing = groupedReminders[baseId] {
-                    if let day = day {
-                        existing.days.insert(day)
-                    }
-                    
+                    if let day { existing.days.insert(day) }
                     groupedReminders[baseId] = existing
                 } else {
-                    groupedReminders[baseId] = (reminder, daysOfWeek)
+                    groupedReminders[baseId] = (reminder, day.map { Set([$0]) } ?? [])
+
                 }
             }
-            
-            let reminders = groupedReminders.map { (_, tuple) in
+
+            let reminders = groupedReminders.map { (uuid, tuple) in
                 WeekdayReminder(
-                    id: tuple.reminder.id,
+                    id: uuid,
                     title: tuple.reminder.title,
                     message: tuple.reminder.message,
                     subTitle: tuple.reminder.subTitle,
@@ -250,10 +248,11 @@ public extension NnReminderManager {
                     daysOfWeek: Array(tuple.days)
                 )
             }
-            
+
             completion(reminders)
         }
     }
+
 }
 
 
@@ -277,18 +276,15 @@ public extension NnReminderManager {
     
     func loadAllFutureDateReminders(completion: @escaping ([FutureDateReminder]) -> Void) {
         notifCenter.getPendingNotificationRequests { requests in
-            var groupedReminders: [String: (reminder: FutureDateReminder, primary: Date?, additional: Set<Date>)] = [:]
+            var groupedReminders: [UUID: (reminder: FutureDateReminder, primary: Date?, additional: Set<Date>)] = [:]
 
             for request in requests {
                 guard let trigger = request.trigger as? UNCalendarNotificationTrigger,
-                      let date = Date.fromComponents(trigger.dateComponents) else {
-                    continue
-                }
+                      let date = Date.fromComponents(trigger.dateComponents) else { continue }
 
                 let idComponents = request.identifier.split(separator: "_")
-                guard let baseId = idComponents.first.map(String.init) else {
-                    continue
-                }
+                guard let baseIdString = idComponents.first,
+                      let baseId = UUID(uuidString: String(baseIdString)) else { continue }
 
                 let isPrimary = request.identifier.hasSuffix("_primary")
 
@@ -318,11 +314,11 @@ public extension NnReminderManager {
                 }
             }
 
-            let reminders = groupedReminders.compactMap { (_, tuple) -> FutureDateReminder? in
+            let reminders = groupedReminders.compactMap { (uuid, tuple) -> FutureDateReminder? in
                 guard let primaryDate = tuple.primary else { return nil }
 
                 return FutureDateReminder(
-                    id: tuple.reminder.id,
+                    id: uuid,
                     title: tuple.reminder.title,
                     message: tuple.reminder.message,
                     subTitle: tuple.reminder.subTitle,
@@ -335,6 +331,7 @@ public extension NnReminderManager {
             completion(reminders)
         }
     }
+
 }
 
 
@@ -378,10 +375,9 @@ fileprivate extension WeekdayReminder {
     /// - If the reminder is recurring on multiple days, it returns an identifier for each day.
     var identifierList: [String] {
         if daysOfWeek.isEmpty {
-            return [id]
+            return [id.uuidString]
         }
-        
-        return daysOfWeek.map({ "\(id)_\($0.name)" })
+        return daysOfWeek.map { "\(id.uuidString)_\($0.name)" }
     }
 }
 

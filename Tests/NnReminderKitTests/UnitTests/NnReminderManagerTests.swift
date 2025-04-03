@@ -84,7 +84,7 @@ extension NnReminderManagerTests {
     
     @Test("Loads countdown remidners")
     func loadsCountdownReminders() async throws {
-        let pendingReminder = makeCountdownReminder(id: "countdown_1", timeInterval: 3600)
+        let pendingReminder = makeCountdownReminder(timeInterval: 3600)
         let request = NotificationRequestFactory.makeCountdownReminderRequest(for: pendingReminder)
         let sut = makeSUT(pendingRequests: [request]).sut
         let reminders = await sut.loadAllCountdownReminders()
@@ -131,7 +131,7 @@ extension NnReminderManagerTests {
     @Test("Loads pending WeekdayReminders")
     func loadWeekdayReminders() async throws {
         let daysOfWeek: [DayOfWeek] = [.monday, .wednesday, .friday]
-        let pendingReminder = makeWeekdayReminder(id: "first", daysOfWeek: daysOfWeek)
+        let pendingReminder = makeWeekdayReminder(daysOfWeek: daysOfWeek)
         let requests = NotificationRequestFactory.makeMultiTriggerReminderRequests(for: pendingReminder)
         let sut = makeSUT(pendingRequests: requests).sut
         let loadedReminders = await sut.loadAllWeekdayReminders()
@@ -189,6 +189,49 @@ extension NnReminderManagerTests {
         #expect(reminders.count == 1)
         #expect(loadedReminder.primaryDate.displayableDate == primary.displayableDate)
         #expect(loadedReminder.additionalDates.count == 2)
+    }
+}
+
+// MARK: - Cancel by Base ID
+extension NnReminderManagerTests {
+    @Test("Cancels all countdown reminders matching base ID")
+    func cancelsCountdownRemindersWithBaseID() async {
+        let id = UUID()
+        let reminder = makeCountdownReminder(id: id)
+        let request = NotificationRequestFactory.makeCountdownReminderRequest(for: reminder)
+        let (sut, center) = makeSUT(pendingRequests: [request])
+        
+        await sut.cancelReminders(identifier: id)
+        
+        #expect(center.idsToRemove == [id.uuidString])
+    }
+
+    @Test("Cancels all weekday reminders matching base ID")
+    func cancelsWeekdayRemindersWithBaseID() async {
+        let id = UUID()
+        let reminder = makeWeekdayReminder(id: id, daysOfWeek: [.monday, .friday])
+        let requests = NotificationRequestFactory.makeMultiTriggerReminderRequests(for: reminder)
+        let (sut, center) = makeSUT(pendingRequests: requests)
+
+        await sut.cancelReminders(identifier: id)
+
+        #expect(center.idsToRemove == requests.map({ $0.identifier }))
+    }
+
+    @Test("Cancels all future date reminders matching base ID")
+    func cancelsFutureDateRemindersWithBaseID() async {
+        let id = UUID()
+        let reminder = makeFutureDateReminder(id: id, additionalDates: [
+            Date.createReminderTime(hour: 10),
+            Date.createReminderTime(hour: 12)
+        ])
+        let requests = NotificationRequestFactory.makeMultiTriggerReminderRequests(for: reminder)
+        let (sut, center) = makeSUT(pendingRequests: requests)
+
+        await sut.cancelReminders(identifier: id)
+
+        #expect(center.idsToRemove.allSatisfy { $0.hasPrefix(id.uuidString) })
+        #expect(center.idsToRemove.count == 3)
     }
 }
 

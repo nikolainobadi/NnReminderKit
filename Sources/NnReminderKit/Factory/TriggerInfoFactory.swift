@@ -29,11 +29,12 @@ enum TriggerInfoFactory {
     }
 
     static func makeTriggers(for reminder: WeekdayReminder) -> [TriggerInfo] {
+        let baseId = reminder.id.uuidString
         let timeComponents = Calendar.current.dateComponents([.hour, .minute], from: reminder.time)
 
         if reminder.daysOfWeek.isEmpty {
             return [
-                TriggerInfo(id: reminder.id, components: timeComponents)
+                TriggerInfo(id: baseId, components: timeComponents)
             ]
         }
 
@@ -42,7 +43,7 @@ enum TriggerInfoFactory {
             components.weekday = day.rawValue
 
             return TriggerInfo(
-                id: "\(reminder.id)_\(day.name)",
+                id: "\(baseId)_\(day.name)",
                 components: components
             )
         }

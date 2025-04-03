@@ -61,7 +61,7 @@ public extension WeekdayReminder {
     ///   - daysOfWeek: The days of the week the reminder should trigger.
     /// - Returns: A configured `WeekdayReminder` instance.
     static func makeSample(
-        id: String = "reminderId",
+        id: UUID = .init(),
         title: String = "Preview Title",
         message: String = "Preview message",
         time: Date = .init(),
@@ -83,9 +83,9 @@ public extension WeekdayReminder {
     /// Returns a list of sample `WeekdayReminder` instances for preview purposes.
     static var sampleList: [WeekdayReminder] {
         return [
-            makeSample(id: "0", time: .createReminderTime(), daysOfWeek: [.monday, .wednesday]),
-            makeSample(id: "1", time: .createReminderTime(hour: 12), daysOfWeek: [.friday]),
-            makeSample(id: "2", time: .createReminderTime(hour: 17), daysOfWeek: [.saturday])
+            makeSample(time: .createReminderTime(), daysOfWeek: [.monday, .wednesday]),
+            makeSample(time: .createReminderTime(hour: 12), daysOfWeek: [.friday]),
+            makeSample(time: .createReminderTime(hour: 17), daysOfWeek: [.saturday])
         ]
     }
 }

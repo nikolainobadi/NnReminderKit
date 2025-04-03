@@ -22,7 +22,7 @@ public extension CountdownReminder {
     ///   - timeInterval: The countdown duration in seconds.
     /// - Returns: A configured `CountdownReminder` instance.
     static func makeSample(
-        id: String = "reminderId",
+        id: UUID = .init(),
         title: String = "One-Time Reminder",
         message: String = "This is a sample one-time reminder",
         repeating: Bool = false,
@@ -40,9 +40,9 @@ public extension CountdownReminder {
     /// Returns a list of sample `CountdownReminder` instances for preview purposes.
     static var sampleList: [CountdownReminder] {
         return [
-            makeSample(id: "0", title: "Take Medicine", timeInterval: 3600),
-            makeSample(id: "1", title: "Meeting in an Hour", timeInterval: 1800),
-            makeSample(id: "2", title: "Workout Reminder", repeating: true, timeInterval: 7200)
+            makeSample(title: "Take Medicine", timeInterval: 3600),
+            makeSample(title: "Meeting in an Hour", timeInterval: 1800),
+            makeSample(title: "Workout Reminder", repeating: true, timeInterval: 7200)
         ]
     }
 }
