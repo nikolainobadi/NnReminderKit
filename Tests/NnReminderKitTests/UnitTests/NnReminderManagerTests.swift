@@ -103,7 +103,7 @@ extension NnReminderManagerTests {
         let (sut, center) = makeSUT()
         let calendarReminder = makeWeekdayReminder(daysOfWeek: [.monday])
         
-        try await sut.scheduleRecurringReminder(calendarReminder)
+        try await sut.scheduleWeekdayReminder(calendarReminder)
         
         #expect(center.addedRequests.count == 1)
     }
@@ -113,7 +113,7 @@ extension NnReminderManagerTests {
         let (sut, center) = makeSUT()
         let calendarReminder = makeWeekdayReminder(daysOfWeek: [.monday, .wednesday, .friday])
         
-        try await sut.scheduleRecurringReminder(calendarReminder)
+        try await sut.scheduleWeekdayReminder(calendarReminder)
         
         #expect(center.addedRequests.count == 3)
     }
@@ -123,7 +123,7 @@ extension NnReminderManagerTests {
         let (sut, center) = makeSUT()
         let calendarReminder = makeWeekdayReminder(daysOfWeek: [.monday, .wednesday, .friday])
         
-        await sut.cancelCalendarReminder(calendarReminder)
+        await sut.cancelWeekdayReminder(calendarReminder)
         
         #expect(center.idsToRemove.count == 3)
     }

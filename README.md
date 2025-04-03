@@ -132,14 +132,14 @@ let eveningReminder = Date.createReminderTime(hour: 17, minute: 0)
 
 ```
 
-### Scheduling a Calendar Reminder
-When scheduling a `CalendarReminder` with multiple days, the system creates a separate notification request for each day internally. However, if all selected days share the same time, only **one** `CalendarReminder` is required. If different times are needed on different days, multiple `CalendarReminder` instances must be created.
+### Scheduling a WeekdayReminder
+When scheduling a `WeekdayReminder` with multiple days, the system creates a separate notification request for each day internally. However, if all selected days share the same time, only **one** `WeekdayReminder` is required. If different times are needed on different days, multiple `WeekdayReminder` instances must be created.
 
 #### Scheduling a Calendar Reminder at same time for Multiple Days 
-If a reminder should repeat on multiple days at the same time, a single `CalendarReminder` can be used. The system will handle creating individual notification requests for each day.  
+If a reminder should repeat on multiple days at the same time, a single `WeekdayReminder` can be used. The system will handle creating individual notification requests for each day.  
 
 ```swift
-let reminder = CalendarReminder(
+let reminder = WeekdayReminder(
     id: "morning_reminder",
     title: "Morning Reminder",
     message: "Start your day!",
@@ -148,15 +148,15 @@ let reminder = CalendarReminder(
     daysOfWeek: [.monday, .wednesday, .friday]
 )
 
-try await reminderManager.scheduleRecurringReminder(reminder)
+try await reminderManager.scheduleWeekdayReminder(reminder)
 
 ```
 
-#### Scheduling Calendar Reminders with Different Times per Day  
-If a reminder should occur at different times depending on the day, separate `CalendarReminder` instances must be used for each time variation.  
+#### Scheduling WeekdayReminders with Different Times per Day  
+If a reminder should occur at different times depending on the day, separate `WeekdayReminder` instances must be used for each time variation.  
 
 ```swift
-let weekdaysReminder = CalendarReminder(
+let weekdaysReminder = WeekdayReminder(
     id: "monday_reminder",
     title: "Workout",
     message: "Time for your Monday workout!",
@@ -165,7 +165,7 @@ let weekdaysReminder = CalendarReminder(
     daysOfWeek: [.monday, .tuesday, .wednesday, .thursday, .friday]
 )
 
-let weekendReminder = CalendarReminder(
+let weekendReminder = WeekdayReminder(
     id: "wednesday_reminder",
     title: "Workout",
     message: "Time for your Wednesday workout!",
@@ -174,8 +174,8 @@ let weekendReminder = CalendarReminder(
     daysOfWeek: [.saturday, .sunday]
 )
 
-try await reminderManager.scheduleRecurringReminder(weekdaysReminder)
-try await reminderManager.scheduleRecurringReminder(weekendReminder)
+try await reminderManager.scheduleWeekdayReminder(weekdaysReminder)
+try await reminderManager.scheduleWeekdayReminder(weekendReminder)
 ```
 
 ### Canceling Reminders
@@ -184,7 +184,7 @@ You can cancel individual reminders or all pending notifications:
 ```swift
 // await is necessary as NnReminderManager is an actor
 await reminderManager.cancelCountdownReminder(countdownReminder)
-await reminderManager.cancelCalendarReminder(calendarReminder)
+await reminderManager.cancelWeekdayReminder(calendarReminder)
 await reminderManager.cancelAllReminders() // Cancels all pending reminders
 ```
 
@@ -194,10 +194,10 @@ Retrieve scheduled reminders from the system:
 ```swift
 Task {
     let countdownReminders = await reminderManager.loadAllCountdownReminders()
-    let calendarReminders = await reminderManager.loadAllCalendarReminders()
+    let weekdayReminders = await reminderManager.loadAllWeekdayReminders()
     
     print("Pending Countdown Reminders: \(countdownReminders)")
-    print("Pending Calendar Reminders: \(calendarReminders)")
+    print("Pending Weekday Reminders: \(weekdayReminders)")
 }
 ```
 

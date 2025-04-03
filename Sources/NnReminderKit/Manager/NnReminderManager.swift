@@ -152,7 +152,7 @@ public extension NnReminderManager {
     ///
     /// - Parameter reminder: The `WeekdayReminder` to schedule.
     /// - Throws: An error if scheduling fails.
-    func scheduleRecurringReminder(_ reminder: WeekdayReminder) async throws {
+    func scheduleWeekdayReminder(_ reminder: WeekdayReminder) async throws {
         try await scheduleMultiTriggerReminder(reminder)
     }
     
@@ -161,7 +161,7 @@ public extension NnReminderManager {
     /// - Parameters:
     ///   - reminder: The `WeekdayReminder` to schedule.
     ///   - completion: A closure receiving an optional error if scheduling fails.
-    func scheduleRecurringReminder(_ reminder: WeekdayReminder, completion: ((Error?) -> Void)? = nil) {
+    func scheduleWeekdayReminder(_ reminder: WeekdayReminder, completion: ((Error?) -> Void)? = nil) {
         for request in NotificationRequestFactory.makeMultiTriggerReminderRequests(for: reminder) {
             notifCenter.add(request, completion: completion)
         }
@@ -170,7 +170,7 @@ public extension NnReminderManager {
     /// Cancels a specific calendar reminder.
     ///
     /// - Parameter reminder: The `WeekdayReminder` to cancel.
-    func cancelCalendarReminder(_ reminder: WeekdayReminder) {
+    func cancelWeekdayReminder(_ reminder: WeekdayReminder) {
         cancelMultiTriggerReminder(reminder)
     }
     
