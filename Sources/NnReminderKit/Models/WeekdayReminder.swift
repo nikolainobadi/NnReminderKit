@@ -10,7 +10,7 @@ import Foundation
 /// This is typically used for recurring reminders, such as daily or weekly notifications.
 public struct WeekdayReminder: MultiTriggerReminder {
     /// Unique identifier for the reminder.
-    public let id: String
+    public let id: UUID
     
     /// The title of the reminder notification.
     public let title: String
@@ -44,7 +44,7 @@ public struct WeekdayReminder: MultiTriggerReminder {
     ///   - repeating: Whether the reminder repeats.
     ///   - daysOfWeek: The days of the week on which the reminder should trigger.
     public init(
-        id: String,
+        id: UUID,
         title: String,
         message: String,
         subTitle: String = "",

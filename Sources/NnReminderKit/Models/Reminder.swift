@@ -4,10 +4,12 @@
 //  Created by Nikolai Nobadi on 3/5/25.
 //
 
+import Foundation
+
 /// A protocol representing a general reminder with basic notification properties.
 protocol Reminder: Identifiable, Sendable {
     /// A unique identifier for the reminder.
-    var id: String { get }
+    var id: UUID { get }
     
     /// The title of the reminder notification.
     var title: String { get }

@@ -16,7 +16,7 @@ enum NotificationRequestFactory {
         let content = makeContent(for: reminder)
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: reminder.timeInterval, repeats: reminder.repeating)
         
-        return .init(identifier: reminder.id, content: content, trigger: trigger)
+        return .init(identifier: reminder.id.uuidString, content: content, trigger: trigger)
     }
 
     /// Creates a list of notification requests for a `MultiTriggerReminders`.

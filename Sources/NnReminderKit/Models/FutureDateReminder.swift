@@ -8,7 +8,7 @@
 import Foundation
 
 public struct FutureDateReminder: MultiTriggerReminder {
-    public let id: String
+    public let id: UUID
     public let title: String
     public let message: String
     public let subTitle: String
@@ -16,7 +16,7 @@ public struct FutureDateReminder: MultiTriggerReminder {
     public let primaryDate: Date
     public let additionalDates: [Date]
     
-    public init(id: String, title: String, message: String, subTitle: String = "", withSound: Bool = true, primaryDate: Date, additionalDates: [Date]) {
+    public init(id: UUID, title: String, message: String, subTitle: String = "", withSound: Bool = true, primaryDate: Date, additionalDates: [Date]) {
         self.id = id
         self.title = title
         self.message = message

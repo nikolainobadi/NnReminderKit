@@ -9,7 +9,7 @@ import Foundation
 /// A reminder that triggers after a set countdown duration rather than at a fixed calendar time.
 public struct CountdownReminder: Reminder {
     /// Unique identifier for the reminder.
-    public let id: String
+    public let id: UUID
     
     /// The title of the reminder notification.
     public let title: String
@@ -31,7 +31,7 @@ public struct CountdownReminder: Reminder {
     ///   - repeating: Whether the reminder repeats.
     ///   - timeInterval: The countdown duration in seconds.
     public init(
-        id: String,
+        id: UUID,
         title: String,
         message: String,
         repeating: Bool,
