@@ -5,6 +5,7 @@
 //
 
 import Foundation
+import UserNotifications
 
 /// A protocol representing a general reminder with basic notification properties.
 protocol Reminder: Identifiable, Sendable {
@@ -20,15 +21,17 @@ protocol Reminder: Identifiable, Sendable {
     /// The subtitle of the reminder notification.
     var subTitle: String { get }
     
-    /// Indicates whether the reminder includes a notification sound.
-    var withSound: Bool { get }
-}
+    var sound: ReminderSound? { get }
 
-// MARK: - Default Values
-extension Reminder {
-    /// Default value for `subTitle` (empty string).
-    var subTitle: String { return "" }
-    
-    /// Default value for `withSound` (enabled).
-    var withSound: Bool { return true }
+    /// The badge number to display on the app icon.
+    var badge: Int? { get }
+
+    /// The category identifier used for grouping or adding actions to the notification.
+    var categoryIdentifier: String { get }
+
+    /// Custom user info dictionary to embed metadata into the notification.
+    var userInfo: [String: String] { get }
+
+    /// Defines the priority level for the notification (e.g., passive, active, time-sensitive, critical).
+    var interruptionLevel: UNNotificationInterruptionLevel { get }
 }

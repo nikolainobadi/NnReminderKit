@@ -8,8 +8,8 @@
 import Foundation
 @testable import NnReminderKit
 
-func makeFutureDateReminder(id: UUID = .init(), additionalDates: [Date]) -> FutureDateReminder {
-    return .init(id: id, title: "Title", message: "Message", subTitle: "", withSound: true, primaryDate: Date.createReminderTime(hour: 9, minute: 0), additionalDates: additionalDates)
+func makeFutureDateReminder(id: UUID = .init(), primaryDate: Date = Date.createReminderTime(hour: 9, minute: 0), additionalDates: [Date] = []) -> FutureDateReminder {
+    return .init(id: id, title: "Title", message: "Message", subTitle: "", sound: nil, badge: nil, categoryIdentifier: "", userInfo: [:], interruptionLevel: .active, primaryDate: primaryDate, additionalDates: additionalDates)
 }
 
 func makeCountdownReminder(id: UUID = .init(), title: String = "Reminder", message: String = "test message", repeating: Bool = false, timeInterval: TimeInterval = 3600) -> CountdownReminder {

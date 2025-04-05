@@ -73,7 +73,7 @@ public extension WeekdayReminder {
             title: title,
             message: message,
             subTitle: "",
-            withSound: true,
+            sound: nil,
             time: time,
             repeating: repeating,
             daysOfWeek: daysOfWeek

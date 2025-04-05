@@ -110,7 +110,7 @@ public extension NnReminderManager {
     /// - Returns: An array of `CountdownReminder` objects.
     func loadAllCountdownReminders() async -> [CountdownReminder] {
         let requests = await notifCenter.getPendingNotificationRequests()
-        
+
         return requests.compactMap { request in
             guard
                 let id = UUID(uuidString: request.identifier),
@@ -119,10 +119,37 @@ public extension NnReminderManager {
                 return nil
             }
 
+            // Extract properties
+            let title = request.content.title
+            let message = request.content.body
+            let subTitle = request.content.subtitle
+            let badge = request.content.badge?.intValue
+            let categoryIdentifier = request.content.categoryIdentifier
+            let interruptionLevel = request.content.interruptionLevel
+            let userInfo = request.content.userInfo as? [String: String] ?? [:]
+
+            // Determine ReminderSound
+            let sound: ReminderSound?
+            if let soundName = request.content.sound?.value(forKey: "_name") as? String {
+                sound = .custom(name: soundName)
+            } else if request.content.sound == .defaultCritical {
+                sound = .critical
+            } else if request.content.sound == .default {
+                sound = .default
+            } else {
+                sound = nil
+            }
+
             return CountdownReminder(
                 id: id,
-                title: request.content.title,
-                message: request.content.body,
+                title: title,
+                message: message,
+                subTitle: subTitle,
+                sound: sound,
+                badge: badge,
+                categoryIdentifier: categoryIdentifier,
+                userInfo: userInfo,
+                interruptionLevel: interruptionLevel,
                 repeating: trigger.repeats,
                 timeInterval: trigger.timeInterval
             )
@@ -184,12 +211,37 @@ public extension NnReminderManager {
                 day = DayOfWeek.allCases.first(where: { $0.name == dayName })
             }
 
+            // Extract additional properties
+            let title = request.content.title
+            let message = request.content.body
+            let subTitle = request.content.subtitle
+            let badge = request.content.badge?.intValue
+            let categoryIdentifier = request.content.categoryIdentifier
+            let interruptionLevel = request.content.interruptionLevel
+            let userInfo = request.content.userInfo as? [String: String] ?? [:]
+
+            // Determine ReminderSound
+            let sound: ReminderSound?
+            if let soundName = request.content.sound?.value(forKey: "_name") as? String {
+                sound = .custom(name: soundName)
+            } else if request.content.sound == .defaultCritical {
+                sound = .critical
+            } else if request.content.sound == .default {
+                sound = .default
+            } else {
+                sound = nil
+            }
+
             let reminder = WeekdayReminder(
                 id: baseId,
-                title: request.content.title,
-                message: request.content.body,
-                subTitle: request.content.subtitle,
-                withSound: request.content.sound != nil,
+                title: title,
+                message: message,
+                subTitle: subTitle,
+                sound: sound,
+                badge: badge,
+                categoryIdentifier: categoryIdentifier,
+                userInfo: userInfo,
+                interruptionLevel: interruptionLevel,
                 time: time,
                 repeating: repeating,
                 daysOfWeek: day.map { [$0] } ?? []
@@ -209,7 +261,11 @@ public extension NnReminderManager {
                 title: tuple.reminder.title,
                 message: tuple.reminder.message,
                 subTitle: tuple.reminder.subTitle,
-                withSound: tuple.reminder.withSound,
+                sound: tuple.reminder.sound,
+                badge: tuple.reminder.badge,
+                categoryIdentifier: tuple.reminder.categoryIdentifier,
+                userInfo: tuple.reminder.userInfo,
+                interruptionLevel: tuple.reminder.interruptionLevel,
                 time: tuple.reminder.time,
                 repeating: tuple.reminder.repeating,
                 daysOfWeek: Array(tuple.days)
@@ -260,12 +316,37 @@ public extension NnReminderManager {
 
             let isPrimary = request.identifier.hasSuffix("_primary")
 
+            // Extract custom values from request.content
+            let title = request.content.title
+            let message = request.content.body
+            let subTitle = request.content.subtitle
+            let badge = request.content.badge?.intValue
+            let categoryIdentifier = request.content.categoryIdentifier
+            let interruptionLevel = request.content.interruptionLevel
+            let userInfo = request.content.userInfo as? [String: String] ?? [:]
+
+            // Determine ReminderSound
+            let sound: ReminderSound?
+            if let soundName = request.content.sound?.value(forKey: "_name") as? String {
+                sound = .custom(name: soundName)
+            } else if request.content.sound == .defaultCritical {
+                sound = .critical
+            } else if request.content.sound == .default {
+                sound = .default
+            } else {
+                sound = nil
+            }
+
             let reminder = FutureDateReminder(
                 id: baseId,
-                title: request.content.title,
-                message: request.content.body,
-                subTitle: request.content.subtitle,
-                withSound: request.content.sound != nil,
+                title: title,
+                message: message,
+                subTitle: subTitle,
+                sound: sound,
+                badge: badge,
+                categoryIdentifier: categoryIdentifier,
+                userInfo: userInfo,
+                interruptionLevel: interruptionLevel,
                 primaryDate: date,
                 additionalDates: []
             )
@@ -294,7 +375,11 @@ public extension NnReminderManager {
                 title: tuple.reminder.title,
                 message: tuple.reminder.message,
                 subTitle: tuple.reminder.subTitle,
-                withSound: tuple.reminder.withSound,
+                sound: tuple.reminder.sound,
+                badge: tuple.reminder.badge,
+                categoryIdentifier: tuple.reminder.categoryIdentifier,
+                userInfo: tuple.reminder.userInfo,
+                interruptionLevel: tuple.reminder.interruptionLevel,
                 primaryDate: primaryDate,
                 additionalDates: Array(tuple.additional)
             )
@@ -377,5 +462,39 @@ fileprivate extension Date {
         newComponents.day = currentComponents.day
 
         return calendar.date(from: newComponents)
+    }
+}
+
+extension UNNotificationContent {
+    func decodeReminderContent() -> DecodedReminderContent {
+        let title = self.title
+        let message = self.body
+        let subTitle = self.subtitle
+        let badge = self.badge?.intValue
+        let categoryIdentifier = self.categoryIdentifier
+        let interruptionLevel = self.interruptionLevel
+        let userInfo = self.userInfo as? [String: String] ?? [:]
+
+        let sound: ReminderSound?
+        if let soundName = self.sound?.value(forKey: "_name") as? String {
+            sound = .custom(name: soundName)
+        } else if self.sound == .defaultCritical {
+            sound = .critical
+        } else if self.sound == .default {
+            sound = .default
+        } else {
+            sound = nil
+        }
+
+        return DecodedReminderContent(
+            title: title,
+            message: message,
+            subTitle: subTitle,
+            badge: badge,
+            categoryIdentifier: categoryIdentifier,
+            interruptionLevel: interruptionLevel,
+            userInfo: userInfo,
+            sound: sound
+        )
     }
 }

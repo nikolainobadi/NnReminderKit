@@ -6,22 +6,45 @@
 //
 
 import Foundation
+import UserNotifications
 
+/// A reminder scheduled for one or more specific future dates.
 public struct FutureDateReminder: MultiTriggerReminder {
     public let id: UUID
     public let title: String
     public let message: String
     public let subTitle: String
-    public let withSound: Bool
+    public let sound: ReminderSound?
+    public let badge: Int?
+    public let categoryIdentifier: String
+    public let userInfo: [String: String]
+    public let interruptionLevel: UNNotificationInterruptionLevel
     public let primaryDate: Date
     public let additionalDates: [Date]
-    
-    public init(id: UUID, title: String, message: String, subTitle: String = "", withSound: Bool = true, primaryDate: Date, additionalDates: [Date]) {
+
+    /// Initializes a `FutureDateReminder` with the given properties.
+    public init(
+        id: UUID,
+        title: String,
+        message: String,
+        subTitle: String = "",
+        sound: ReminderSound? = nil,
+        badge: Int? = nil,
+        categoryIdentifier: String = "",
+        userInfo: [String: String] = [:],
+        interruptionLevel: UNNotificationInterruptionLevel = .active,
+        primaryDate: Date,
+        additionalDates: [Date]
+    ) {
         self.id = id
         self.title = title
         self.message = message
         self.subTitle = subTitle
-        self.withSound = withSound
+        self.sound = sound
+        self.badge = badge
+        self.categoryIdentifier = categoryIdentifier
+        self.userInfo = userInfo
+        self.interruptionLevel = interruptionLevel
         self.primaryDate = primaryDate
         self.additionalDates = additionalDates
     }

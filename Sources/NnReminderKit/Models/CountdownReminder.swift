@@ -5,41 +5,45 @@
 //
 
 import Foundation
+import UserNotifications
 
 /// A reminder that triggers after a set countdown duration rather than at a fixed calendar time.
 public struct CountdownReminder: Reminder {
-    /// Unique identifier for the reminder.
     public let id: UUID
-    
-    /// The title of the reminder notification.
     public let title: String
-    
-    /// The message/body of the reminder notification.
     public let message: String
-    
-    /// Whether the reminder should repeat after triggering.
+    public let subTitle: String
+    public let sound: ReminderSound?
+    public let badge: Int?
+    public let categoryIdentifier: String
+    public let userInfo: [String: String]
+    public let interruptionLevel: UNNotificationInterruptionLevel
     public let repeating: Bool
-    
-    /// The countdown duration (in seconds) until the reminder triggers.
     public let timeInterval: TimeInterval
 
     /// Initializes a `CountdownReminder` with the given properties.
-    /// - Parameters:
-    ///   - id: Unique identifier.
-    ///   - title: Title of the reminder.
-    ///   - message: Message body.
-    ///   - repeating: Whether the reminder repeats.
-    ///   - timeInterval: The countdown duration in seconds.
     public init(
         id: UUID,
         title: String,
         message: String,
+        subTitle: String = "",
+        sound: ReminderSound? = nil,
+        badge: Int? = nil,
+        categoryIdentifier: String = "",
+        userInfo: [String: String] = [:],
+        interruptionLevel: UNNotificationInterruptionLevel = .active,
         repeating: Bool,
         timeInterval: TimeInterval
     ) {
         self.id = id
         self.title = title
         self.message = message
+        self.subTitle = subTitle
+        self.sound = sound
+        self.badge = badge
+        self.categoryIdentifier = categoryIdentifier
+        self.userInfo = userInfo
+        self.interruptionLevel = interruptionLevel
         self.repeating = repeating
         self.timeInterval = timeInterval
     }
