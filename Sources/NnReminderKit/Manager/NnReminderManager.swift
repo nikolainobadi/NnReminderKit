@@ -8,7 +8,7 @@
 import UserNotifications
 
 /// Manages scheduling, canceling, and retrieving reminders using `UserNotifications`.
-public actor NnReminderManager {
+public final class NnReminderManager {
     /// Notification center dependency for handling notifications.
     private let notifCenter: NotifCenter
     
@@ -24,7 +24,7 @@ public actor NnReminderManager {
 // MARK: - Setup
 public extension NnReminderManager {
     /// Default initializer using `NotifCenterAdapter` for interacting with `UserNotifications`.
-    init() {
+    convenience init() {
         self.init(notifCenter: NotifCenterAdapter())
     }
     
@@ -37,35 +37,22 @@ public extension NnReminderManager {
 }
 
 
-// MARK: - Auth
-public extension NnReminderManager {
+// MARK: - PermissionDelegate
+extension NnReminderManager: PermissionDelegate {
     /// Requests notification authorization from the user.
     ///
     /// - Parameter options: The notification options, such as `.alert`, `.badge`, and `.sound`.
     /// - Returns: `true` if authorization is granted, otherwise `false`.
     @discardableResult
-    func requestAuthPermission(options: UNAuthorizationOptions) async -> Bool {
+    public func requestAuthPermission(options: UNAuthorizationOptions) async -> Bool {
         return (try? await notifCenter.requestAuthorization(options: options)) ?? false
     }
     
     /// Checks the current notification authorization status asynchronously.
     ///
     /// - Returns: The current `UNAuthorizationStatus`.
-    func checkForPermissionsWithoutRequest() async -> UNAuthorizationStatus {
-        return await withCheckedContinuation { continuation in
-            checkForPermissionsWithoutRequest { status in
-                continuation.resume(returning: status)
-            }
-        }
-    }
-    
-    /// Checks the current notification authorization status.
-    ///
-    /// - Parameter completion: A closure receiving the current `UNAuthorizationStatus`.
-    func checkForPermissionsWithoutRequest(completion: @escaping (UNAuthorizationStatus) -> Void) {
-        notifCenter.getAuthorizationStatus { status in
-            completion(status)
-        }
+    public func checkForPermissionsWithoutRequest() async -> UNAuthorizationStatus {
+        return await notifCenter.getAuthorizationStatus()
     }
 }
 
@@ -76,14 +63,16 @@ public extension NnReminderManager {
         notifCenter.removeAllPendingNotificationRequests()
     }
     
-    func cancelReminders(identifier: UUID) {
-        notifCenter.getPendingNotificationRequests { requests in
-            let matchingIds = requests
-                .map(\.identifier)
-                .filter { $0.hasPrefix(identifier.uuidString) }
-            
-            self.notifCenter.removePendingNotificationRequests(identifiers: matchingIds)
-        }
+    /// Cancels all scheduled reminders that share the same base identifier.
+    ///
+    /// - Parameter identifier: The base UUID used to identify reminders for cancellation.
+    func cancelReminders(identifier: UUID) async {
+        let requests = await notifCenter.getPendingNotificationRequests()
+        let matchingIds = requests
+            .map(\.identifier)
+            .filter { $0.hasPrefix(identifier.uuidString) }
+        
+        notifCenter.removePendingNotificationRequests(identifiers: matchingIds)
     }
 }
 
@@ -120,37 +109,23 @@ public extension NnReminderManager {
     ///
     /// - Returns: An array of `CountdownReminder` objects.
     func loadAllCountdownReminders() async -> [CountdownReminder] {
-        return await withCheckedContinuation { continuation in
-            loadAllCountdownReminders { reminders in
-                continuation.resume(returning: reminders)
+        let requests = await notifCenter.getPendingNotificationRequests()
+        
+        return requests.compactMap { request in
+            guard
+                let id = UUID(uuidString: request.identifier),
+                let trigger = request.trigger as? UNTimeIntervalNotificationTrigger
+            else {
+                return nil
             }
-        }
-    }
-    
-    /// Loads all pending countdown reminders.
-    ///
-    /// - Parameter completion: A closure receiving an array of `CountdownReminder` objects.
-    func loadAllCountdownReminders(completion: @escaping ([CountdownReminder]) -> Void) {
-        notifCenter.getPendingNotificationRequests { requests in
-            var reminders: [CountdownReminder] = []
-            
-            for request in requests {
-                guard let id = UUID(uuidString: request.identifier), let trigger = request.trigger as? UNTimeIntervalNotificationTrigger else {
-                    continue
-                }
-                
-                let reminder = CountdownReminder(
-                    id: id,
-                    title: request.content.title,
-                    message: request.content.body,
-                    repeating: trigger.repeats,
-                    timeInterval: trigger.timeInterval
-                )
-                
-                reminders.append(reminder)
-            }
-            
-            completion(reminders)
+
+            return CountdownReminder(
+                id: id,
+                title: request.content.title,
+                message: request.content.body,
+                repeating: trigger.repeats,
+                timeInterval: trigger.timeInterval
+            )
         }
     }
 }
@@ -188,160 +163,160 @@ public extension NnReminderManager {
     ///
     /// - Returns: An array of `WeekdayReminder` objects.
     func loadAllWeekdayReminders() async -> [WeekdayReminder] {
-        return await withCheckedContinuation { continuation in
-            loadAllWeekdayReminders { reminders in
-                continuation.resume(returning: reminders)
+        let requests = await notifCenter.getPendingNotificationRequests()
+        var groupedReminders: [UUID: (reminder: WeekdayReminder, days: Set<DayOfWeek>)] = [:]
+
+        for request in requests {
+            guard
+                let trigger = request.trigger as? UNCalendarNotificationTrigger,
+                let time = Date.fromComponents(trigger.dateComponents)
+            else { continue }
+
+            let repeating = trigger.repeats
+            let idComponents = request.identifier.split(separator: "_")
+            guard
+                let baseIdString = idComponents.first,
+                let baseId = UUID(uuidString: String(baseIdString))
+            else { continue }
+
+            var day: DayOfWeek?
+            if idComponents.count > 1, let dayName = idComponents.last {
+                day = DayOfWeek.allCases.first(where: { $0.name == dayName })
+            }
+
+            let reminder = WeekdayReminder(
+                id: baseId,
+                title: request.content.title,
+                message: request.content.body,
+                subTitle: request.content.subtitle,
+                withSound: request.content.sound != nil,
+                time: time,
+                repeating: repeating,
+                daysOfWeek: day.map { [$0] } ?? []
+            )
+
+            if var existing = groupedReminders[baseId] {
+                if let day { existing.days.insert(day) }
+                groupedReminders[baseId] = existing
+            } else {
+                groupedReminders[baseId] = (reminder, day.map { Set([$0]) } ?? [])
             }
         }
-    }
-    
-    /// Loads all pending calendar reminders.
-    ///
-    /// - Parameter completion: A closure receiving an array of `WeekdayReminder` objects.
-    func loadAllWeekdayReminders(completion: @escaping ([WeekdayReminder]) -> Void) {
-        notifCenter.getPendingNotificationRequests { requests in
-            var groupedReminders: [UUID: (reminder: WeekdayReminder, days: Set<DayOfWeek>)] = [:]
 
-            for request in requests {
-                guard let trigger = request.trigger as? UNCalendarNotificationTrigger,
-                      let time = Date.fromComponents(trigger.dateComponents) else { continue }
-
-                let repeating = trigger.repeats
-                let idComponents = request.identifier.split(separator: "_")
-                guard let baseIdString = idComponents.first,
-                      let baseId = UUID(uuidString: String(baseIdString)) else { continue }
-
-                var day: DayOfWeek?
-                if idComponents.count > 1, let dayName = idComponents.last {
-                    day = DayOfWeek.allCases.first(where: { $0.name == dayName })
-                }
-
-                let reminder = WeekdayReminder(
-                    id: baseId,
-                    title: request.content.title,
-                    message: request.content.body,
-                    subTitle: request.content.subtitle,
-                    withSound: request.content.sound != nil,
-                    time: time,
-                    repeating: repeating,
-                    daysOfWeek: day.map { [$0] } ?? []
-                )
-
-                if var existing = groupedReminders[baseId] {
-                    if let day { existing.days.insert(day) }
-                    groupedReminders[baseId] = existing
-                } else {
-                    groupedReminders[baseId] = (reminder, day.map { Set([$0]) } ?? [])
-
-                }
-            }
-
-            let reminders = groupedReminders.map { (uuid, tuple) in
-                WeekdayReminder(
-                    id: uuid,
-                    title: tuple.reminder.title,
-                    message: tuple.reminder.message,
-                    subTitle: tuple.reminder.subTitle,
-                    withSound: tuple.reminder.withSound,
-                    time: tuple.reminder.time,
-                    repeating: tuple.reminder.repeating,
-                    daysOfWeek: Array(tuple.days)
-                )
-            }
-
-            completion(reminders)
+        return groupedReminders.map { (uuid, tuple) in
+            WeekdayReminder(
+                id: uuid,
+                title: tuple.reminder.title,
+                message: tuple.reminder.message,
+                subTitle: tuple.reminder.subTitle,
+                withSound: tuple.reminder.withSound,
+                time: tuple.reminder.time,
+                repeating: tuple.reminder.repeating,
+                daysOfWeek: Array(tuple.days)
+            )
         }
     }
-
 }
 
 
 // MARK: - FutureDateReminder
 public extension NnReminderManager {
+    /// Schedules a future date reminder consisting of one or more dates.
+    ///
+    /// - Parameter reminder: The `FutureDateReminder` instance to schedule.
+    /// - Throws: An error if scheduling fails.
     func scheduleFutureDateReminder(_ reminder: FutureDateReminder) async throws {
         try await scheduleMultiTriggerReminder(reminder)
     }
-    
+
+    /// Cancels all pending notifications associated with the given `FutureDateReminder`.
+    ///
+    /// - Parameter reminder: The `FutureDateReminder` to cancel.
     func cancelFutureDateReminder(_ reminder: FutureDateReminder) {
         cancelMultiTriggerReminder(reminder)
     }
-    
+
+    /// Loads all pending future date reminders asynchronously.
+    ///
+    /// This method scans pending notification requests and groups them into `FutureDateReminder` objects based on shared UUIDs.
+    /// It distinguishes between primary and additional dates using the request identifier suffix.
+    ///
+    /// - Returns: An array of `FutureDateReminder` instances reconstructed from the notification center.
     func loadAllFutureDateReminders() async -> [FutureDateReminder] {
-        return await withCheckedContinuation { continuation in
-            loadAllFutureDateReminders { reminders in
-                continuation.resume(returning: reminders)
-            }
-        }
-    }
-    
-    func loadAllFutureDateReminders(completion: @escaping ([FutureDateReminder]) -> Void) {
-        notifCenter.getPendingNotificationRequests { requests in
-            var groupedReminders: [UUID: (reminder: FutureDateReminder, primary: Date?, additional: Set<Date>)] = [:]
+        let requests = await notifCenter.getPendingNotificationRequests()
+        var groupedReminders: [UUID: (reminder: FutureDateReminder, primary: Date?, additional: Set<Date>)] = [:]
 
-            for request in requests {
-                guard let trigger = request.trigger as? UNCalendarNotificationTrigger,
-                      let date = Date.fromComponents(trigger.dateComponents) else { continue }
+        for request in requests {
+            guard
+                let trigger = request.trigger as? UNCalendarNotificationTrigger,
+                let date = Date.fromComponents(trigger.dateComponents)
+            else { continue }
 
-                let idComponents = request.identifier.split(separator: "_")
-                guard let baseIdString = idComponents.first,
-                      let baseId = UUID(uuidString: String(baseIdString)) else { continue }
+            let idComponents = request.identifier.split(separator: "_")
+            guard
+                let baseIdString = idComponents.first,
+                let baseId = UUID(uuidString: String(baseIdString))
+            else { continue }
 
-                let isPrimary = request.identifier.hasSuffix("_primary")
+            let isPrimary = request.identifier.hasSuffix("_primary")
 
-                let reminder = FutureDateReminder(
-                    id: baseId,
-                    title: request.content.title,
-                    message: request.content.body,
-                    subTitle: request.content.subtitle,
-                    withSound: request.content.sound != nil,
-                    primaryDate: date,
-                    additionalDates: []
-                )
+            let reminder = FutureDateReminder(
+                id: baseId,
+                title: request.content.title,
+                message: request.content.body,
+                subTitle: request.content.subtitle,
+                withSound: request.content.sound != nil,
+                primaryDate: date,
+                additionalDates: []
+            )
 
-                if var existing = groupedReminders[baseId] {
-                    if isPrimary {
-                        existing.primary = date
-                    } else {
-                        existing.additional.insert(date)
-                    }
-                    groupedReminders[baseId] = existing
+            if var existing = groupedReminders[baseId] {
+                if isPrimary {
+                    existing.primary = date
                 } else {
-                    groupedReminders[baseId] = (
-                        reminder,
-                        primary: isPrimary ? date : nil,
-                        additional: isPrimary ? [] : [date]
-                    )
+                    existing.additional.insert(date)
                 }
-            }
-
-            let reminders = groupedReminders.compactMap { (uuid, tuple) -> FutureDateReminder? in
-                guard let primaryDate = tuple.primary else { return nil }
-
-                return FutureDateReminder(
-                    id: uuid,
-                    title: tuple.reminder.title,
-                    message: tuple.reminder.message,
-                    subTitle: tuple.reminder.subTitle,
-                    withSound: tuple.reminder.withSound,
-                    primaryDate: primaryDate,
-                    additionalDates: Array(tuple.additional)
+                groupedReminders[baseId] = existing
+            } else {
+                groupedReminders[baseId] = (
+                    reminder,
+                    primary: isPrimary ? date : nil,
+                    additional: isPrimary ? [] : [date]
                 )
             }
+        }
 
-            completion(reminders)
+        return groupedReminders.compactMap { (uuid, tuple) -> FutureDateReminder? in
+            guard let primaryDate = tuple.primary else { return nil }
+
+            return FutureDateReminder(
+                id: uuid,
+                title: tuple.reminder.title,
+                message: tuple.reminder.message,
+                subTitle: tuple.reminder.subTitle,
+                withSound: tuple.reminder.withSound,
+                primaryDate: primaryDate,
+                additionalDates: Array(tuple.additional)
+            )
         }
     }
-
 }
 
 
 // MARK: - Private Methods
 private extension NnReminderManager {
+    /// Cancels all pending notifications associated with a multi-trigger reminder.
+    ///
+    /// - Parameter reminder: A reminder conforming to `MultiTriggerReminder` whose notifications should be removed.
     func cancelMultiTriggerReminder(_ reminder: any MultiTriggerReminder) {
         let identifiers = reminder.triggers.map({ $0.id })
         notifCenter.removePendingNotificationRequests(identifiers: identifiers)
     }
-    
+
+    /// Schedules all notifications for a multi-trigger reminder asynchronously.
+    ///
+    /// - Parameter reminder: A reminder conforming to `MultiTriggerReminder` to schedule.
+    /// - Throws: An error if any notification request fails.
     func scheduleMultiTriggerReminder(_ reminder: any MultiTriggerReminder) async throws {
         for request in NotificationRequestFactory.makeMultiTriggerReminderRequests(for: reminder) {
             try await notifCenter.add(request)
@@ -357,12 +332,12 @@ private extension NnReminderManager {
 protocol NotifCenter: Sendable {
     func removeAllPendingNotificationRequests()
     func add(_ request: UNNotificationRequest) async throws
+    func getAuthorizationStatus() async -> UNAuthorizationStatus
     func removePendingNotificationRequests(identifiers: [String])
+    func getPendingNotificationRequests() async -> [UNNotificationRequest]
     func setNotificationDelegate(_ delegate: UNUserNotificationCenterDelegate)
     func add(_ request: UNNotificationRequest, completion: ((Error?) -> Void)?)
     func requestAuthorization(options: UNAuthorizationOptions) async throws -> Bool
-    func getAuthorizationStatus(completion: @escaping (UNAuthorizationStatus) -> Void)
-    func getPendingNotificationRequests(completion: @escaping ([UNNotificationRequest]) -> Void)
 }
 
 

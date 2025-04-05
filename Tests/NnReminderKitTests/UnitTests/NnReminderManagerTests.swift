@@ -28,7 +28,7 @@ extension NnReminderManagerTests {
     func setsNotifDelegate() async {
         let (sut, center) = makeSUT()
         
-        await sut.setNotificationDelegate(DelegateStub())
+        sut.setNotificationDelegate(DelegateStub())
         
         #expect(center.delegate != nil)
     }
@@ -77,7 +77,7 @@ extension NnReminderManagerTests {
         let (sut, center) = makeSUT()
         let countdownReminder = makeCountdownReminder()
         
-        await sut.cancelCountdownReminder(countdownReminder)
+        sut.cancelCountdownReminder(countdownReminder)
         
         #expect(center.idsToRemove.count == 1)
     }
@@ -123,7 +123,7 @@ extension NnReminderManagerTests {
         let (sut, center) = makeSUT()
         let calendarReminder = makeWeekdayReminder(daysOfWeek: [.monday, .wednesday, .friday])
         
-        await sut.cancelWeekdayReminder(calendarReminder)
+        sut.cancelWeekdayReminder(calendarReminder)
         
         #expect(center.idsToRemove.count == 3)
     }
@@ -167,7 +167,7 @@ extension NnReminderManagerTests {
             Date.createReminderTime(hour: 12)
         ])
 
-        await sut.cancelFutureDateReminder(reminder)
+        sut.cancelFutureDateReminder(reminder)
 
         #expect(center.idsToRemove.count == 3)
     }
@@ -296,12 +296,12 @@ private extension NnReminderManagerTests {
             return isAuthorized
         }
         
-        func getAuthorizationStatus(completion: @escaping (UNAuthorizationStatus) -> Void) {
-            completion(authStatus)
+        func getAuthorizationStatus() async -> UNAuthorizationStatus {
+            return authStatus
         }
         
-        func getPendingNotificationRequests(completion: @escaping ([UNNotificationRequest]) -> Void) {
-            completion(pendingRequests)
+        func getPendingNotificationRequests() async -> [UNNotificationRequest] {
+            return pendingRequests
         }
     }
 }

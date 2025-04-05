@@ -59,7 +59,7 @@ public extension View {
     ) -> some View {
         modifier(
             ReminderPermissionRequestViewModifier(
-                permissionENV: .init(manager: .init(), options: options),
+                permissionENV: .init(delegate: NnReminderManager(), options: options),
                 deniedView: deniedView,
                 detailView: detailView
             )

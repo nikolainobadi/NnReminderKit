@@ -13,7 +13,7 @@ import UserNotifications
 final class ReminderPermissionENV: ObservableObject {
     @Published var status: UNAuthorizationStatus = .notDetermined
     
-    private let manager: NnReminderManager
+    private let delegate: PermissionDelegate
     private let options: UNAuthorizationOptions
     
     /// Initializes the environment object with a notification manager and authorization options.
@@ -21,9 +21,9 @@ final class ReminderPermissionENV: ObservableObject {
     /// - Parameters:
     ///   - manager: The `NnReminderManager` responsible for handling notification permissions.
     ///   - options: The authorization options (e.g., `.alert`, `.sound`, `.badge`).
-    init(manager: NnReminderManager, options: UNAuthorizationOptions) {
-        self.manager = manager
+    init(delegate: PermissionDelegate, options: UNAuthorizationOptions) {
         self.options = options
+        self.delegate = delegate
     }
 }
 
@@ -33,7 +33,7 @@ extension ReminderPermissionENV {
     ///
     /// This method does not request permissions; it only fetches the existing status.
     func checkPermissionStatus() async {
-        let status = await manager.checkForPermissionsWithoutRequest()
+        let status = await delegate.checkForPermissionsWithoutRequest()
         
         self.status = status
     }
@@ -42,8 +42,15 @@ extension ReminderPermissionENV {
     ///
     /// If granted, `status` is updated to `.authorized`; otherwise, it is set to `.denied`.
     func requestPermission() async {
-        let granted = await manager.requestAuthPermission(options: options)
+        let granted = await delegate.requestAuthPermission(options: options)
         
         status = granted ? .authorized : .denied
     }
+}
+
+
+// MARK: - Dependencies
+protocol PermissionDelegate: Sendable {
+    func checkForPermissionsWithoutRequest() async -> UNAuthorizationStatus
+    func requestAuthPermission(options: UNAuthorizationOptions) async -> Bool
 }

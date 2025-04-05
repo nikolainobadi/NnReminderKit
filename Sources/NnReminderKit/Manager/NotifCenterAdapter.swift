@@ -64,19 +64,11 @@ extension NotifCenterAdapter: NotifCenter {
         notifCenter.delegate = delegate
     }
     
-    /// Retrieves the current notification authorization status.
-    ///
-    /// - Parameter completion: A closure that receives the current `UNAuthorizationStatus`.
-    func getAuthorizationStatus(completion: @escaping (UNAuthorizationStatus) -> Void) {
-        notifCenter.getNotificationSettings { settings in
-            completion(settings.authorizationStatus)
-        }
+    func getPendingNotificationRequests() async -> [UNNotificationRequest] {
+        return await notifCenter.pendingNotificationRequests()
     }
     
-    /// Fetches all pending notification requests.
-    ///
-    /// - Parameter completion: A closure that receives an array of `UNNotificationRequest` objects.
-    func getPendingNotificationRequests(completion: @escaping ([UNNotificationRequest]) -> Void) {
-        notifCenter.getPendingNotificationRequests(completionHandler: completion)
+    func getAuthorizationStatus() async -> UNAuthorizationStatus {
+        return await notifCenter.notificationSettings().authorizationStatus
     }
 }
