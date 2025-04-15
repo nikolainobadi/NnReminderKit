@@ -6,7 +6,6 @@
 //
 
 public enum ReminderSound: Sendable {
-    case none
     case `default`
     case critical
     case custom(name: String)

@@ -49,17 +49,27 @@ private extension NotificationRequestFactory {
         content.title = reminder.title
         content.body = reminder.message
         content.subtitle = reminder.subTitle
-        content.userInfo = reminder.userInfo
         content.interruptionLevel = reminder.interruptionLevel
         content.categoryIdentifier = reminder.categoryIdentifier
+        
+        var userInfo = reminder.userInfo
         
         if let badge = reminder.badge {
             content.badge = .init(integerLiteral: badge)
         }
 
-        if let sound = reminder.sound, let notificationSound = sound.asUNNotificationSound() {
-            content.sound = notificationSound
+        if let sound = reminder.sound {
+            content.sound = sound.asUNNotificationSound()
+            
+            switch sound {
+            case .custom(let soundName):
+                userInfo[.customSoundNameKey] = soundName
+            default:
+                break
+            }
         }
+        
+        content.userInfo = userInfo
 
         return content
     }
@@ -68,10 +78,8 @@ private extension NotificationRequestFactory {
 
 // MARK: - Extension Dependencies
 fileprivate extension ReminderSound {
-    func asUNNotificationSound() -> UNNotificationSound? {
+    func asUNNotificationSound() -> UNNotificationSound {
         switch self {
-        case .none:
-            return nil
         case .default:
             return .default
         case .critical:
@@ -79,5 +87,11 @@ fileprivate extension ReminderSound {
         case .custom(let name):
             return UNNotificationSound(named: UNNotificationSoundName(name))
         }
+    }
+}
+
+extension String {
+    static var customSoundNameKey: String {
+        return "nnreminder_soundName"
     }
 }

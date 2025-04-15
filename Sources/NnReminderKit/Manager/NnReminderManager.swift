@@ -127,18 +127,7 @@ public extension NnReminderManager {
             let categoryIdentifier = request.content.categoryIdentifier
             let interruptionLevel = request.content.interruptionLevel
             let userInfo = request.content.userInfo as? [String: String] ?? [:]
-
-            // Determine ReminderSound
-            let sound: ReminderSound?
-            if let soundName = request.content.sound?.value(forKey: "_name") as? String {
-                sound = .custom(name: soundName)
-            } else if request.content.sound == .defaultCritical {
-                sound = .critical
-            } else if request.content.sound == .default {
-                sound = .default
-            } else {
-                sound = nil
-            }
+            let sound = request.content.decodeReminderSound()
 
             return CountdownReminder(
                 id: id,
@@ -211,7 +200,6 @@ public extension NnReminderManager {
                 day = DayOfWeek.allCases.first(where: { $0.name == dayName })
             }
 
-            // Extract additional properties
             let title = request.content.title
             let message = request.content.body
             let subTitle = request.content.subtitle
@@ -219,18 +207,7 @@ public extension NnReminderManager {
             let categoryIdentifier = request.content.categoryIdentifier
             let interruptionLevel = request.content.interruptionLevel
             let userInfo = request.content.userInfo as? [String: String] ?? [:]
-
-            // Determine ReminderSound
-            let sound: ReminderSound?
-            if let soundName = request.content.sound?.value(forKey: "_name") as? String {
-                sound = .custom(name: soundName)
-            } else if request.content.sound == .defaultCritical {
-                sound = .critical
-            } else if request.content.sound == .default {
-                sound = .default
-            } else {
-                sound = nil
-            }
+            let sound = request.content.decodeReminderSound()
 
             let reminder = WeekdayReminder(
                 id: baseId,
@@ -272,6 +249,7 @@ public extension NnReminderManager {
             )
         }
     }
+
 }
 
 
@@ -324,18 +302,7 @@ public extension NnReminderManager {
             let categoryIdentifier = request.content.categoryIdentifier
             let interruptionLevel = request.content.interruptionLevel
             let userInfo = request.content.userInfo as? [String: String] ?? [:]
-
-            // Determine ReminderSound
-            let sound: ReminderSound?
-            if let soundName = request.content.sound?.value(forKey: "_name") as? String {
-                sound = .custom(name: soundName)
-            } else if request.content.sound == .defaultCritical {
-                sound = .critical
-            } else if request.content.sound == .default {
-                sound = .default
-            } else {
-                sound = nil
-            }
+            let sound = request.content.decodeReminderSound()
 
             let reminder = FutureDateReminder(
                 id: baseId,
@@ -465,36 +432,18 @@ fileprivate extension Date {
     }
 }
 
-extension UNNotificationContent {
-    func decodeReminderContent() -> DecodedReminderContent {
-        let title = self.title
-        let message = self.body
-        let subTitle = self.subtitle
-        let badge = self.badge?.intValue
-        let categoryIdentifier = self.categoryIdentifier
-        let interruptionLevel = self.interruptionLevel
+private extension UNNotificationContent {
+    func decodeReminderSound() -> ReminderSound? {
         let userInfo = self.userInfo as? [String: String] ?? [:]
 
-        let sound: ReminderSound?
-        if let soundName = self.sound?.value(forKey: "_name") as? String {
-            sound = .custom(name: soundName)
-        } else if self.sound == .defaultCritical {
-            sound = .critical
-        } else if self.sound == .default {
-            sound = .default
+        if let soundName = userInfo[.customSoundNameKey] {
+            return .custom(name: soundName)
+        } else if sound == .defaultCritical {
+            return .critical
+        } else if sound == .default {
+            return .default
         } else {
-            sound = nil
+            return nil
         }
-
-        return DecodedReminderContent(
-            title: title,
-            message: message,
-            subTitle: subTitle,
-            badge: badge,
-            categoryIdentifier: categoryIdentifier,
-            interruptionLevel: interruptionLevel,
-            userInfo: userInfo,
-            sound: sound
-        )
     }
 }
