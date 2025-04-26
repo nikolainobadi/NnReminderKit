@@ -37,7 +37,7 @@ Add the following dependency to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/nikolainobadi/NnReminderKit", branch: "main")
+    .package(url: "https://github.com/nikolainobadi/NnReminderKit", from: "0.8.0")
 ]
 ```
 Or, add it via Xcode:  
