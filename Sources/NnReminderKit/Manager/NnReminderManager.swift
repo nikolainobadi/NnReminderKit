@@ -5,6 +5,7 @@
 //  Created by Nikolai Nobadi on 3/5/25.
 //
 
+import CoreLocation
 import UserNotifications
 
 /// Manages scheduling, canceling, and retrieving reminders using `UserNotifications`.
@@ -249,7 +250,6 @@ public extension NnReminderManager {
             )
         }
     }
-
 }
 
 
@@ -349,6 +349,82 @@ public extension NnReminderManager {
                 interruptionLevel: tuple.reminder.interruptionLevel,
                 primaryDate: primaryDate,
                 additionalDates: Array(tuple.additional)
+            )
+        }
+    }
+}
+
+
+// MARK: - LocationReminder
+public extension NnReminderManager {
+    /// Schedules a location-based reminder asynchronously.
+    ///
+    /// - Parameter reminder: The `LocationReminder` to schedule.
+    /// - Throws: An error if scheduling fails.
+    func scheduleLocationReminder(_ reminder: LocationReminder) async throws {
+        let request = NotificationRequestFactory.makeLocationReminderRequest(for: reminder)
+        try await notifCenter.add(request)
+    }
+    
+    /// Schedules a location-based reminder with a completion handler.
+    ///
+    /// - Parameters:
+    ///   - reminder: The `LocationReminder` to schedule.
+    ///   - completion: A closure receiving an optional error if scheduling fails.
+    func scheduleLocationReminder(_ reminder: LocationReminder, completion: ((Error?) -> Void)? = nil) {
+        let request = NotificationRequestFactory.makeLocationReminderRequest(for: reminder)
+        notifCenter.add(request, completion: completion)
+    }
+    
+    /// Cancels a specific location-based reminder.
+    ///
+    /// - Parameter reminder: The `LocationReminder` to cancel.
+    func cancelLocationReminder(_ reminder: LocationReminder) {
+        notifCenter.removePendingNotificationRequests(identifiers: [reminder.id.uuidString])
+    }
+    
+    /// Loads all pending location-based reminders asynchronously.
+    ///
+    /// - Returns: An array of `LocationReminder` objects.
+    func loadAllLocationReminders() async -> [LocationReminder] {
+        let requests = await notifCenter.getPendingNotificationRequests()
+
+        return requests.compactMap { request in
+            guard
+                let trigger = request.trigger as? UNLocationNotificationTrigger,
+                let region = trigger.region as? CLCircularRegion,
+                let id = UUID(uuidString: request.identifier)
+            else { return nil }
+            
+            let title = request.content.title
+            let message = request.content.body
+            let subTitle = request.content.subtitle
+            let badge = request.content.badge?.intValue
+            let categoryIdentifier = request.content.categoryIdentifier
+            let interruptionLevel = request.content.interruptionLevel
+            let userInfo = request.content.userInfo as? [String: String] ?? [:]
+            let sound = request.content.decodeReminderSound()
+            
+            let locationRegion = LocationRegion(
+                latitude: region.center.latitude,
+                longitude: region.center.longitude,
+                radius: region.radius,
+                notifyOnEntry: region.notifyOnEntry,
+                notifyOnExit: region.notifyOnExit
+            )
+
+            return LocationReminder(
+                id: id,
+                title: title,
+                message: message,
+                subTitle: subTitle,
+                sound: sound,
+                badge: badge,
+                categoryIdentifier: categoryIdentifier,
+                userInfo: userInfo,
+                interruptionLevel: interruptionLevel,
+                locationRegion: locationRegion,
+                repeats: trigger.repeats
             )
         }
     }

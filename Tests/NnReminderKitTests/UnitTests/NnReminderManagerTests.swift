@@ -236,6 +236,44 @@ extension NnReminderManagerTests {
 }
 
 
+// MARK: - LocationReminder
+extension NnReminderManagerTests {
+    @Test("Schedules a LocationReminder")
+    func schedulesLocationReminder() async throws {
+        let (sut, center) = makeSUT()
+        let reminder = makeLocationReminder()
+        
+        try await sut.scheduleLocationReminder(reminder)
+        
+        #expect(center.addedRequests.count == 1)
+    }
+    
+    @Test("Cancels a LocationReminder")
+    func cancelsLocationReminder() async {
+        let (sut, center) = makeSUT()
+        let reminder = makeLocationReminder()
+        
+        sut.cancelLocationReminder(reminder)
+        
+        #expect(center.idsToRemove == [reminder.id.uuidString])
+    }
+    
+    @Test("Loads pending LocationReminders")
+    func loadsLocationReminders() async throws {
+        let pendingReminder = makeLocationReminder()
+        let request = NotificationRequestFactory.makeLocationReminderRequest(for: pendingReminder)
+        let sut = makeSUT(pendingRequests: [request]).sut
+        let reminders = await sut.loadAllLocationReminders()
+        let loadedReminder = try #require(reminders.first)
+        
+        #expect(reminders.count == 1)
+        #expect(loadedReminder.locationRegion.latitude == pendingReminder.locationRegion.latitude)
+        #expect(loadedReminder.locationRegion.longitude == pendingReminder.locationRegion.longitude)
+        #expect(loadedReminder.locationRegion.radius == pendingReminder.locationRegion.radius)
+    }
+}
+
+
 // MARK: - SUT
 private extension NnReminderManagerTests {
     func makeSUT(throwError: Bool = false, isAuthorized: Bool = false, authStatus: UNAuthorizationStatus = .notDetermined, pendingRequests: [UNNotificationRequest] = []) -> (sut: NnReminderManager, center: MockCenter) {

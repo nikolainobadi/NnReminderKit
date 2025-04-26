@@ -29,21 +29,30 @@ enum NotificationRequestFactory {
             .init(identifier: $0.id, content: content, trigger: makeRecurringTrigger($0))
         }
     }
+    
+    /// Creates a notification request for a `LocationReminder`.
+    /// - Parameter reminder: The `LocationReminder` containing title, message, and location data.
+    /// - Returns: A `UNNotificationRequest` configured for a location-based notification.
+    static func makeLocationReminderRequest(for reminder: LocationReminder) -> UNNotificationRequest {
+        let content = makeContent(for: reminder)
+        let trigger = makeLocationTrigger(for: reminder)
+        
+        return .init(identifier: reminder.id.uuidString, content: content, trigger: trigger)
+    }
 }
 
 
 // MARK: - Private Methods
 private extension NotificationRequestFactory {
-    /// Creates a `UNCalendarNotificationTrigger` for a `WeekdayReminder`.
-    /// - Parameter info: The `TriggerInfo` containing date components for the scheduled reminder.
-    /// - Returns: A `UNCalendarNotificationTrigger` configured for the specified date components.
     static func makeRecurringTrigger(_ info: TriggerInfo) -> UNCalendarNotificationTrigger {
         return .init(dateMatching: info.components, repeats: true)
     }
+    
+    static func makeLocationTrigger(for reminder: LocationReminder) -> UNLocationNotificationTrigger {
+        let region = reminder.locationRegion.toCLRegion(identifier: reminder.id.uuidString)
+        return UNLocationNotificationTrigger(region: region, repeats: reminder.repeats)
+    }
 
-    /// Creates a `UNMutableNotificationContent` from a `Reminder`.
-    /// - Parameter reminder: A reminder object (`CountdownReminder` or `WeekdayReminder`).
-    /// - Returns: A configured `UNMutableNotificationContent` with title, message, subtitle, and sound settings.
     static func makeContent(for reminder: any Reminder) -> UNMutableNotificationContent {
         let content = UNMutableNotificationContent()
         content.title = reminder.title
@@ -93,5 +102,20 @@ fileprivate extension ReminderSound {
 extension String {
     static var customSoundNameKey: String {
         return "nnreminder_soundName"
+    }
+}
+
+import CoreLocation
+
+extension LocationRegion {
+    func toCLRegion(identifier: String) -> CLCircularRegion {
+        let region = CLCircularRegion(
+            center: CLLocationCoordinate2D(latitude: latitude, longitude: longitude),
+            radius: radius,
+            identifier: identifier
+        )
+        region.notifyOnEntry = notifyOnEntry
+        region.notifyOnExit = notifyOnExit
+        return region
     }
 }
