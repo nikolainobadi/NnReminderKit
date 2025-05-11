@@ -21,7 +21,20 @@ public struct CountdownReminder: Reminder {
     public let repeating: Bool
     public let timeInterval: TimeInterval
 
-    /// Initializes a `CountdownReminder` with the given properties.
+    /// Initializes a `CountdownReminder`, which triggers after a specified time interval rather than at a specific calendar time.
+    ///
+    /// - Parameters:
+    ///   - id: A unique identifier for the reminder.
+    ///   - title: The title displayed in the notification.
+    ///   - message: The main body text of the notification.
+    ///   - subTitle: An optional subtitle for the notification. Defaults to an empty string.
+    ///   - sound: An optional custom sound to play when the notification is delivered.
+    ///   - badge: An optional number to display on the app icon.
+    ///   - categoryIdentifier: A string used to categorize the notification for custom actions. Defaults to an empty string.
+    ///   - userInfo: A dictionary of custom key-value pairs to include with the notification payload. Defaults to an empty dictionary.
+    ///   - interruptionLevel: The system-defined importance level of the notification. Defaults to `.active`.
+    ///   - repeating: A Boolean value indicating whether the notification should repeat.
+    ///   - timeInterval: The countdown duration, in seconds, after which the reminder will fire.
     public init(
         id: UUID,
         title: String,

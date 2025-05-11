@@ -1,15 +1,14 @@
 //
-//  FutureDateReminder.swift
+//  LocationReminder.swift
 //  NnReminderKit
 //
-//  Created by Nikolai Nobadi on 4/2/25.
+//  Created by Nikolai Nobadi on 4/25/25.
 //
 
-import Foundation
 import UserNotifications
 
-/// A reminder scheduled for one or more specific future dates.
-public struct FutureDateReminder: MultiTriggerReminder {
+#if os(iOS)
+public struct LocationReminder: Reminder {
     public let id: UUID
     public let title: String
     public let message: String
@@ -19,10 +18,10 @@ public struct FutureDateReminder: MultiTriggerReminder {
     public let categoryIdentifier: String
     public let userInfo: [String: String]
     public let interruptionLevel: UNNotificationInterruptionLevel
-    public let primaryDate: Date
-    public let additionalDates: [Date]
+    public let locationRegion: LocationRegion
+    public let repeats: Bool
 
-    /// Initializes a new `FutureDateReminder`, which can schedule notifications for multiple specific future dates.
+    /// Initializes a `LocationReminder`, which triggers when the device enters or exits a specified geographic region.
     ///
     /// - Parameters:
     ///   - id: A unique identifier for the reminder.
@@ -34,8 +33,8 @@ public struct FutureDateReminder: MultiTriggerReminder {
     ///   - categoryIdentifier: A string used to categorize the notification for custom actions. Defaults to an empty string.
     ///   - userInfo: A dictionary of custom key-value pairs to include with the notification payload. Defaults to an empty dictionary.
     ///   - interruptionLevel: The system-defined importance level of the notification. Defaults to `.active`.
-    ///   - primaryDate: The main date the notification should be delivered.
-    ///   - additionalDates: Any additional dates at which this reminder should trigger.
+    ///   - locationRegion: The geographic region that triggers the notification.
+    ///   - repeats: A Boolean value indicating whether the notification should trigger again when the region event occurs again.
     public init(
         id: UUID,
         title: String,
@@ -46,8 +45,8 @@ public struct FutureDateReminder: MultiTriggerReminder {
         categoryIdentifier: String = "",
         userInfo: [String: String] = [:],
         interruptionLevel: UNNotificationInterruptionLevel = .active,
-        primaryDate: Date,
-        additionalDates: [Date]
+        locationRegion: LocationRegion,
+        repeats: Bool
     ) {
         self.id = id
         self.title = title
@@ -58,15 +57,40 @@ public struct FutureDateReminder: MultiTriggerReminder {
         self.categoryIdentifier = categoryIdentifier
         self.userInfo = userInfo
         self.interruptionLevel = interruptionLevel
-        self.primaryDate = primaryDate
-        self.additionalDates = additionalDates
+        self.locationRegion = locationRegion
+        self.repeats = repeats
     }
 }
 
 
-// MARK: - Internal Helpers
-internal extension FutureDateReminder {
-    var triggers: [TriggerInfo] {
-        return TriggerInfoFactory.makeTriggers(for: self)
+// MARK: - Dependencies
+public struct LocationRegion: Sendable {
+    public let latitude: Double
+    public let longitude: Double
+    public let radius: Double
+    public let notifyOnEntry: Bool
+    public let notifyOnExit: Bool
+
+    /// Initializes a `LocationRegion`, which defines a circular geographic region for triggering location-based reminders.
+    ///
+    /// - Parameters:
+    ///   - latitude: The latitude of the region center.
+    ///   - longitude: The longitude of the region center.
+    ///   - radius: The radius (in meters) of the region. Defaults to 100.
+    ///   - notifyOnEntry: A Boolean indicating whether to trigger on region entry. Defaults to `true`.
+    ///   - notifyOnExit: A Boolean indicating whether to trigger on region exit. Defaults to `false`.
+    public init(
+        latitude: Double,
+        longitude: Double,
+        radius: Double = 100,
+        notifyOnEntry: Bool = true,
+        notifyOnExit: Bool = false
+    ) {
+        self.latitude = latitude
+        self.longitude = longitude
+        self.radius = radius
+        self.notifyOnEntry = notifyOnEntry
+        self.notifyOnExit = notifyOnExit
     }
 }
+#endif

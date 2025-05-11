@@ -5,6 +5,7 @@
 //  Created by Nikolai Nobadi on 3/5/25.
 //
 
+import CoreLocation
 import UserNotifications
 
 /// Manages scheduling, canceling, and retrieving reminders using `UserNotifications`.
@@ -63,15 +64,17 @@ public extension NnReminderManager {
         notifCenter.removeAllPendingNotificationRequests()
     }
     
-    /// Cancels all scheduled reminders that share the same base identifier.
+    /// Cancels all scheduled reminders that share any of the provided base identifiers.
     ///
-    /// - Parameter identifier: The base UUID used to identify reminders for cancellation.
-    func cancelReminders(identifier: UUID) async {
+    /// - Parameter identifiers: An array of UUIDs used to identify reminders for cancellation.
+    func cancelReminders(identifiers: [UUID]) async {
         let requests = await notifCenter.getPendingNotificationRequests()
         let matchingIds = requests
             .map(\.identifier)
-            .filter { $0.hasPrefix(identifier.uuidString) }
-        
+            .filter { id in
+                identifiers.contains { uuid in id.hasPrefix(uuid.uuidString) }
+            }
+
         notifCenter.removePendingNotificationRequests(identifiers: matchingIds)
     }
 }
@@ -249,7 +252,6 @@ public extension NnReminderManager {
             )
         }
     }
-
 }
 
 
@@ -355,6 +357,83 @@ public extension NnReminderManager {
 }
 
 
+// MARK: - LocationReminder
+#if os(iOS)
+public extension NnReminderManager {
+    /// Schedules a location-based reminder asynchronously.
+    ///
+    /// - Parameter reminder: The `LocationReminder` to schedule.
+    /// - Throws: An error if scheduling fails.
+    func scheduleLocationReminder(_ reminder: LocationReminder) async throws {
+        let request = NotificationRequestFactory.makeLocationReminderRequest(for: reminder)
+        try await notifCenter.add(request)
+    }
+    
+    /// Schedules a location-based reminder with a completion handler.
+    ///
+    /// - Parameters:
+    ///   - reminder: The `LocationReminder` to schedule.
+    ///   - completion: A closure receiving an optional error if scheduling fails.
+    func scheduleLocationReminder(_ reminder: LocationReminder, completion: ((Error?) -> Void)? = nil) {
+        let request = NotificationRequestFactory.makeLocationReminderRequest(for: reminder)
+        notifCenter.add(request, completion: completion)
+    }
+    
+    /// Cancels a specific location-based reminder.
+    ///
+    /// - Parameter reminder: The `LocationReminder` to cancel.
+    func cancelLocationReminder(_ reminder: LocationReminder) {
+        notifCenter.removePendingNotificationRequests(identifiers: [reminder.id.uuidString])
+    }
+    
+    /// Loads all pending location-based reminders asynchronously.
+    ///
+    /// - Returns: An array of `LocationReminder` objects.
+    func loadAllLocationReminders() async -> [LocationReminder] {
+        let requests = await notifCenter.getPendingNotificationRequests()
+
+        return requests.compactMap { request in
+            guard
+                let trigger = request.trigger as? UNLocationNotificationTrigger,
+                let region = trigger.region as? CLCircularRegion,
+                let id = UUID(uuidString: request.identifier)
+            else { return nil }
+            
+            let title = request.content.title
+            let message = request.content.body
+            let subTitle = request.content.subtitle
+            let badge = request.content.badge?.intValue
+            let categoryIdentifier = request.content.categoryIdentifier
+            let interruptionLevel = request.content.interruptionLevel
+            let userInfo = request.content.userInfo as? [String: String] ?? [:]
+            let sound = request.content.decodeReminderSound()
+            
+            let locationRegion = LocationRegion(
+                latitude: region.center.latitude,
+                longitude: region.center.longitude,
+                radius: region.radius,
+                notifyOnEntry: region.notifyOnEntry,
+                notifyOnExit: region.notifyOnExit
+            )
+
+            return LocationReminder(
+                id: id,
+                title: title,
+                message: message,
+                subTitle: subTitle,
+                sound: sound,
+                badge: badge,
+                categoryIdentifier: categoryIdentifier,
+                userInfo: userInfo,
+                interruptionLevel: interruptionLevel,
+                locationRegion: locationRegion,
+                repeats: trigger.repeats
+            )
+        }
+    }
+}
+#endif
+
 // MARK: - Private Methods
 private extension NnReminderManager {
     /// Cancels all pending notifications associated with a multi-trigger reminder.
@@ -395,7 +474,7 @@ protocol NotifCenter: Sendable {
 
 // MARK: - Extension Dependencies
 /// Extension for `WeekdayReminder` providing computed properties.
-fileprivate extension WeekdayReminder {
+private extension WeekdayReminder {
     /// Generates a list of unique identifiers for the reminder.
     ///
     /// - If the reminder is not associated with specific days, it returns a single identifier.
@@ -409,7 +488,7 @@ fileprivate extension WeekdayReminder {
 }
 
 /// Extension for `Date` providing utilities for creating `Date` objects from `DateComponents`.
-fileprivate extension Date {
+private extension Date {
     /// Creates a `Date` object from the given `DateComponents`.
     ///
     /// - Uses the current year, month, and day to ensure a valid date.
