@@ -5,7 +5,7 @@
 ![Platforms](https://img.shields.io/badge/platforms-iOS%2017%20%2B%20%7C%20macOS%2012%20%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-lightgray)
 
-NnReminderKit is a Swift package designed to simplify the scheduling and management of local notifications, including countdown-based and calendar-based reminders. It provides a clean API for handling reminders with support for authorization checks, scheduling, canceling, and retrieving pending reminders.
+**NnReminderKit** is a Swift package designed to simplify the scheduling and management of local notifications, including countdown, calendar-based, and location-based reminders. It provides a clean, SwiftUI-friendly API for handling permissions, scheduling, canceling, and loading pending reminders.
 
 ## Table of Contents
 - [Features](#features)  
@@ -18,79 +18,64 @@ NnReminderKit is a Swift package designed to simplify the scheduling and managem
   - [Scheduling a Calendar Reminder](#scheduling-a-calendar-reminder)  
     - [Same Time for Multiple Days](#scheduling-a-calendar-reminder-at-same-time-for-multiple-days)  
     - [Different Times per Day](#scheduling-calendar-reminders-with-different-times-per-day)  
+  - [Scheduling a Location Reminder](#scheduling-a-location-reminder)  
   - [Canceling Reminders](#canceling-reminders)  
   - [Loading Pending Reminders](#loading-pending-reminders)  
-- [Future Plans](#future-plans)  
+- [Architecture Notes](#architecture-notes)  
+- [Documentation](#documentation)   
+- [About This Project](#about-this-project)  
+- [Contributing](#contributing)  
 - [License](#license)  
 
 ## Features
-- Request notification permissions.
+
+- Request and handle notification permissions with SwiftUI view modifiers.
 - Schedule and cancel countdown (one-time) reminders.
-- Schedule and cancel calendar-based (recurring) reminders.
-- Load pending reminders asynchronously.
-- Abstracted notification handling for easy testing.
+- Schedule and cancel calendar-based (recurring) weekday reminders.
+- Schedule and manage location-based reminders.
+- Load all pending reminders with detailed metadata.
+- Clean abstraction for unit testing and previewing reminder behavior.
+
 
 ## Installation
 
 ### Swift Package Manager (SPM)
+
 Add the following dependency to your `Package.swift`:
 
 ```swift
-dependencies: [
-    .package(url: "https://github.com/nikolainobadi/NnReminderKit", from: "0.8.0")
-]
+.package(url: "https://github.com/nikolainobadi/NnReminderKit", from: "1.0.0")
 ```
-Or, add it via Xcode:  
-1. Open your project.  
-2. Go to **File > Add Packages**.  
-3. Enter the repository URL:  
-   https://github.com/nikolainobadi/NnReminderKit  
-4. Select **Branch** and enter `main`.  
-<!--4. Select **Up to Next Major Version** and enter `1.0.0`.  -->
-5. Click **Add Package**.  
 
 ## Usage
 
-## Handling Notification Permissions with Ease  
+### Handling Notification Permissions with Ease  
 
-NnReminderKit simplifies handling local notification permissions by providing a convenient view modifier. This allows you to seamlessly request authorization, present a detailed explanation before requesting permission, and handle denied cases gracefully.  
-
-To use this, apply the `requestReminderPermissions` modifier to the first view where users configure notifications. You must provide two views:  
-- A **detail view** explaining why notifications are needed before requesting permission.  
-- A **denied view** that guides users to enable notifications in settings if they decline permission.  
+Apply the `.requestReminderPermissions` SwiftUI view modifier to prompt users for notification permissions with built-in explanation and fallback UI:
 
 ```swift
-struct NotificationSetupView: View {
-    var body: some View {
-        NotificationContent()
-            .requestReminderPermissions(
-                options: [.alert, .badge, .sound], // includes all options by default
-                detailView: { requestPermission in
-                    VStack {
-                        // details about why you need permission/what you will use it for
-                        Button("Enable Notifications", action: requestPermission)
-                    }
-                },
-                deniedView: { settingsURL in 
-                    VStack {
-                        Text("Notifications are disabled. Please enable them in settings.")
-                        // the URL to open settings on iOS
-                        // will be nil on macOS
-                        if let url = settingsURL {
-                            Button("Open Settings") {
-                                UIApplication.shared.open(url)
-                            }
-                        }
+NotificationContent()
+    .requestReminderPermissions(
+        options: [.alert, .badge, .sound],
+        detailView: { requestPermission in
+            VStack {
+                Button("Enable Notifications", action: requestPermission)
+            }
+        },
+        deniedView: { settingsURL in 
+            VStack {
+                Text("Notifications are disabled. Please enable them in settings.")
+                if let url = settingsURL {
+                    Button("Open Settings") {
+                        UIApplication.shared.open(url)
                     }
                 }
-            )
-    }
-}
-
-``` 
+            }
+        }
+    )
+```
 
 ### Manual Requesting Notification Permissions
-Alternatively, you can manually request permissions with `NnReminderManager` directly.
 
 ```swift
 let reminderManager = NnReminderManager()
@@ -98,11 +83,9 @@ Task {
     let granted = await reminderManager.requestAuthPermission(options: [.alert, .badge, .sound])
     print("Permissions granted: \(granted)")
 }
-
 ```
 
 ### Scheduling a Countdown Reminder
-Schedule a one-time reminder that triggers after a specified time interval:  
 
 ```swift
 let countdownReminder = CountdownReminder(
@@ -110,33 +93,24 @@ let countdownReminder = CountdownReminder(
     title: "Drink Water",
     message: "Stay hydrated!",
     repeating: false,
-    timeInterval: 3600 // 1 hour
+    timeInterval: 3600
 )
 
 Task {
     try await reminderManager.scheduleCountdownReminder(countdownReminder)
 }
-
 ```
 
 ### Creating Reminder Times
 
-This package includes a convenient Date extension for generating reminder times without manually constructing DateComponents. Instead of calculating the exact date and time, you can use this extension to quickly create a time for a reminder.
-
 ```swift
-// Create a Date object for 8:30 AM today
 let reminderTime = Date.createReminderTime(hour: 8, minute: 30)
-
-// Create a Date object for 5:00 PM today
 let eveningReminder = Date.createReminderTime(hour: 17, minute: 0)
-
 ```
 
-### Scheduling a WeekdayReminder
-When scheduling a `WeekdayReminder` with multiple days, the system creates a separate notification request for each day internally. However, if all selected days share the same time, only **one** `WeekdayReminder` is required. If different times are needed on different days, multiple `WeekdayReminder` instances must be created.
+### Scheduling a Calendar Reminder
 
-#### Scheduling a Calendar Reminder at same time for Multiple Days 
-If a reminder should repeat on multiple days at the same time, a single `WeekdayReminder` can be used. The system will handle creating individual notification requests for each day.  
+#### Same Time for Multiple Days
 
 ```swift
 let reminder = WeekdayReminder(
@@ -149,60 +123,98 @@ let reminder = WeekdayReminder(
 )
 
 try await reminderManager.scheduleWeekdayReminder(reminder)
-
 ```
 
-#### Scheduling WeekdayReminders with Different Times per Day  
-If a reminder should occur at different times depending on the day, separate `WeekdayReminder` instances must be used for each time variation.  
+#### Different Times per Day
 
 ```swift
-let weekdaysReminder = WeekdayReminder(
+let mondayReminder = WeekdayReminder(
     id: "monday_reminder",
     title: "Workout",
     message: "Time for your Monday workout!",
     time: Date.createReminderTime(hour: 7, minute: 0),
     repeating: true,
-    daysOfWeek: [.monday, .tuesday, .wednesday, .thursday, .friday]
+    daysOfWeek: [.monday]
 )
 
 let weekendReminder = WeekdayReminder(
-    id: "wednesday_reminder",
-    title: "Workout",
-    message: "Time for your Wednesday workout!",
+    id: "weekend_reminder",
+    title: "Stretch",
+    message: "Weekend stretch reminder!",
     time: Date.createReminderTime(hour: 8, minute: 0),
     repeating: true,
     daysOfWeek: [.saturday, .sunday]
 )
 
-try await reminderManager.scheduleWeekdayReminder(weekdaysReminder)
+try await reminderManager.scheduleWeekdayReminder(mondayReminder)
 try await reminderManager.scheduleWeekdayReminder(weekendReminder)
 ```
 
-### Canceling Reminders
-You can cancel individual reminders or all pending notifications:  
+### Scheduling a Location Reminder
 
 ```swift
-// await is necessary as NnReminderManager is an actor
+let locationRegion = LocationRegion(
+    latitude: 37.7749,
+    longitude: -122.4194,
+    radius: 200,
+    notifyOnEntry: true,
+    notifyOnExit: false
+)
+
+let locationReminder = LocationReminder(
+    id: UUID(),
+    title: "Arrived at the Park",
+    message: "Don't forget to stretch!",
+    locationRegion: locationRegion,
+    repeats: false
+)
+
+try await reminderManager.scheduleLocationReminder(locationReminder)
+```
+
+### Canceling Reminders
+
+```swift
 await reminderManager.cancelCountdownReminder(countdownReminder)
 await reminderManager.cancelWeekdayReminder(calendarReminder)
-await reminderManager.cancelAllReminders() // Cancels all pending reminders
+await reminderManager.cancelLocationReminder(locationReminder)
+await reminderManager.cancelReminders(identifiers: [idList])
+await reminderManager.cancelAllReminders()
 ```
 
 ### Loading Pending Reminders
-Retrieve scheduled reminders from the system:  
 
 ```swift
 Task {
     let countdownReminders = await reminderManager.loadAllCountdownReminders()
     let weekdayReminders = await reminderManager.loadAllWeekdayReminders()
-    
-    print("Pending Countdown Reminders: \(countdownReminders)")
-    print("Pending Weekday Reminders: \(weekdayReminders)")
+    let locationReminders = await reminderManager.loAdAllLocationReminders()
 }
 ```
 
-## Future Plans
-- Support for location-based notifications.
+## Architecture Notes
+
+NnReminderKit is organized around a central `NnReminderManager` class that abstracts `UNUserNotificationCenter` interactions. It supports three primary reminder types:
+- `CountdownReminder` for time-interval-based alerts
+- `WeekdayReminder` for calendar-based repetition
+- `LocationReminder` for geofenced alerts
+
+The permission handling is implemented using a SwiftUI-first approach with composable modifiers.
+
+## About This Project
+
+NnReminderKit was built to reduce the boilerplate involved in managing local notifications on Apple platforms. The native APIs can be verbose and error-prone, especially when dealing with multiple types of reminders. This library was designed to offer a clean, testable, and SwiftUI-friendly abstraction for modern apps.
+
+## Contributing
+
+Contributions, feedback, and feature requests are welcome!  
+To contribute:
+- Fork the repository
+- [Open an issue](https://github.com/nikolainobadi/NnReminderKit/issues) or [discussion](https://github.com/nikolainobadi/NnReminderKit/discussions) to propose changes
+- Submit a pull request with your updates
+
+---
 
 ## License
-NnReminderKit is available under the MIT license.
+
+NnReminderKit is available under the [MIT license](./LICENSE).
