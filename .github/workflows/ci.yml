@@ -40,4 +40,4 @@ jobs:
         run: swift build
 
       - name: Run Tests
-        run: xcodebuild test -scheme NnReminderKit -destination 'platform=macOS' | xcpretty
+        run: xcodebuild test -scheme NnReminderKit -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.3.1' | xcpretty
