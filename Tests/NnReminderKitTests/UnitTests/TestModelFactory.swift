@@ -20,7 +20,9 @@ func makeWeekdayReminder(id: UUID = .init(), title: String = "Reminder", message
     return .init(id: id, title: title, message: message, time: .createReminderTime(hour: hour, minute: minute), repeating: repeating, daysOfWeek: daysOfWeek)
 }
 
+#if os(iOS)
 func makeLocationReminder(id: UUID = UUID()) -> LocationReminder {
     LocationReminder(id: id, title: "Store Visit", message: "Don't forget to buy milk!", subTitle: "", sound: .default, badge: nil, categoryIdentifier: "", userInfo: [:], interruptionLevel: .active, locationRegion: .init(latitude: 37.7749, longitude: -122.4194, radius: 100), repeats: false
     )
 }
+#endif

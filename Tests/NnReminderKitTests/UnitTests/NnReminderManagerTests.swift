@@ -269,6 +269,7 @@ extension NnReminderManagerTests {
 
 
 // MARK: - LocationReminder
+#if os(iOS)
 extension NnReminderManagerTests {
     @Test("Schedules a LocationReminder")
     func schedulesLocationReminder() async throws {
@@ -304,7 +305,7 @@ extension NnReminderManagerTests {
         #expect(loadedReminder.locationRegion.radius == pendingReminder.locationRegion.radius)
     }
 }
-
+#endif
 
 // MARK: - SUT
 private extension NnReminderManagerTests {

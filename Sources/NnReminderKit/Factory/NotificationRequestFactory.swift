@@ -30,6 +30,7 @@ enum NotificationRequestFactory {
         }
     }
     
+    #if os(iOS)
     /// Creates a notification request for a `LocationReminder`.
     /// - Parameter reminder: The `LocationReminder` containing title, message, and location data.
     /// - Returns: A `UNNotificationRequest` configured for a location-based notification.
@@ -39,6 +40,7 @@ enum NotificationRequestFactory {
         
         return .init(identifier: reminder.id.uuidString, content: content, trigger: trigger)
     }
+    #endif
 }
 
 
@@ -48,10 +50,12 @@ private extension NotificationRequestFactory {
         return .init(dateMatching: info.components, repeats: true)
     }
     
+    #if os(iOS)
     static func makeLocationTrigger(for reminder: LocationReminder) -> UNLocationNotificationTrigger {
         let region = reminder.locationRegion.toCLRegion(identifier: reminder.id.uuidString)
         return UNLocationNotificationTrigger(region: region, repeats: reminder.repeats)
     }
+    #endif
 
     static func makeContent(for reminder: any Reminder) -> UNMutableNotificationContent {
         let content = UNMutableNotificationContent()
@@ -105,6 +109,7 @@ extension String {
     }
 }
 
+#if os(iOS)
 import CoreLocation
 
 extension LocationRegion {
@@ -119,3 +124,4 @@ extension LocationRegion {
         return region
     }
 }
+#endif

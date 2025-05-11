@@ -358,6 +358,7 @@ public extension NnReminderManager {
 
 
 // MARK: - LocationReminder
+#if os(iOS)
 public extension NnReminderManager {
     /// Schedules a location-based reminder asynchronously.
     ///
@@ -431,7 +432,7 @@ public extension NnReminderManager {
         }
     }
 }
-
+#endif
 
 // MARK: - Private Methods
 private extension NnReminderManager {

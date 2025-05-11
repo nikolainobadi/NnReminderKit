@@ -6,8 +6,11 @@ on:
       - main
 
 jobs:
-  build:
+  test:
     runs-on: macos-14
+    strategy:
+      matrix:
+        platform: [iOS, macOS]
 
     steps:
       - name: Check out code
@@ -18,12 +21,12 @@ jobs:
 
       - name: Display Xcode Version
         run: xcodebuild -version
-        
+
       - name: Set up Swift
         uses: swift-actions/setup-swift@v2
         with:
           swift-version: '6.0'
-          
+
       - name: Cache Ruby gems
         uses: actions/cache@v3
         with:
@@ -39,5 +42,16 @@ jobs:
       - name: Build
         run: swift build
 
-      - name: Run Tests
-        run: xcodebuild test -scheme NnReminderKit -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.3.1' | xcpretty
+      - name: Run Tests (${{ matrix.platform }})
+        run: |
+          if [ "${{ matrix.platform }}" == "iOS" ]; then
+            xcodebuild test \
+              -scheme NnReminderKit \
+              -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.3.1' \
+              | xcpretty
+          else
+            xcodebuild test \
+              -scheme NnReminderKit \
+              -destination 'platform=macOS,arch=arm64' \
+              | xcpretty
+          fi

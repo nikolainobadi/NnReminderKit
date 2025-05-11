@@ -7,6 +7,7 @@
 
 import UserNotifications
 
+#if os(iOS)
 public struct LocationReminder: Reminder {
     public let id: UUID
     public let title: String
@@ -92,3 +93,4 @@ public struct LocationRegion: Sendable {
         self.notifyOnExit = notifyOnExit
     }
 }
+#endif
