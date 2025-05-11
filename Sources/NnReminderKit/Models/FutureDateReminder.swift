@@ -22,7 +22,20 @@ public struct FutureDateReminder: MultiTriggerReminder {
     public let primaryDate: Date
     public let additionalDates: [Date]
 
-    /// Initializes a `FutureDateReminder` with the given properties.
+    /// Initializes a new `FutureDateReminder`, which can schedule notifications for multiple specific future dates.
+    ///
+    /// - Parameters:
+    ///   - id: A unique identifier for the reminder.
+    ///   - title: The title displayed in the notification.
+    ///   - message: The main body text of the notification.
+    ///   - subTitle: An optional subtitle for the notification. Defaults to an empty string.
+    ///   - sound: An optional custom sound to play when the notification is delivered.
+    ///   - badge: An optional number to display on the app icon.
+    ///   - categoryIdentifier: A string used to categorize the notification for custom actions. Defaults to an empty string.
+    ///   - userInfo: A dictionary of custom key-value pairs to include with the notification payload. Defaults to an empty dictionary.
+    ///   - interruptionLevel: The system-defined importance level of the notification. Defaults to `.active`.
+    ///   - primaryDate: The main date the notification should be delivered.
+    ///   - additionalDates: Any additional dates at which this reminder should trigger.
     public init(
         id: UUID,
         title: String,
@@ -49,6 +62,7 @@ public struct FutureDateReminder: MultiTriggerReminder {
         self.additionalDates = additionalDates
     }
 }
+
 
 // MARK: - Internal Helpers
 internal extension FutureDateReminder {

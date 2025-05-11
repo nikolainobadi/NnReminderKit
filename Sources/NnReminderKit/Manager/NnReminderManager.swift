@@ -64,15 +64,17 @@ public extension NnReminderManager {
         notifCenter.removeAllPendingNotificationRequests()
     }
     
-    /// Cancels all scheduled reminders that share the same base identifier.
+    /// Cancels all scheduled reminders that share any of the provided base identifiers.
     ///
-    /// - Parameter identifier: The base UUID used to identify reminders for cancellation.
-    func cancelReminders(identifier: UUID) async {
+    /// - Parameter identifiers: An array of UUIDs used to identify reminders for cancellation.
+    func cancelReminders(identifiers: [UUID]) async {
         let requests = await notifCenter.getPendingNotificationRequests()
         let matchingIds = requests
             .map(\.identifier)
-            .filter { $0.hasPrefix(identifier.uuidString) }
-        
+            .filter { id in
+                identifiers.contains { uuid in id.hasPrefix(uuid.uuidString) }
+            }
+
         notifCenter.removePendingNotificationRequests(identifiers: matchingIds)
     }
 }
@@ -471,7 +473,7 @@ protocol NotifCenter: Sendable {
 
 // MARK: - Extension Dependencies
 /// Extension for `WeekdayReminder` providing computed properties.
-fileprivate extension WeekdayReminder {
+private extension WeekdayReminder {
     /// Generates a list of unique identifiers for the reminder.
     ///
     /// - If the reminder is not associated with specific days, it returns a single identifier.
@@ -485,7 +487,7 @@ fileprivate extension WeekdayReminder {
 }
 
 /// Extension for `Date` providing utilities for creating `Date` objects from `DateComponents`.
-fileprivate extension Date {
+private extension Date {
     /// Creates a `Date` object from the given `DateComponents`.
     ///
     /// - Uses the current year, month, and day to ensure a valid date.

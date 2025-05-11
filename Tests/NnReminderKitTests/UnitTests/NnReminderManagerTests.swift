@@ -201,7 +201,7 @@ extension NnReminderManagerTests {
         let request = NotificationRequestFactory.makeCountdownReminderRequest(for: reminder)
         let (sut, center) = makeSUT(pendingRequests: [request])
         
-        await sut.cancelReminders(identifier: id)
+        await sut.cancelReminders(identifiers: [id])
         
         #expect(center.idsToRemove == [id.uuidString])
     }
@@ -213,7 +213,7 @@ extension NnReminderManagerTests {
         let requests = NotificationRequestFactory.makeMultiTriggerReminderRequests(for: reminder)
         let (sut, center) = makeSUT(pendingRequests: requests)
 
-        await sut.cancelReminders(identifier: id)
+        await sut.cancelReminders(identifiers: [id])
 
         #expect(center.idsToRemove == requests.map({ $0.identifier }))
     }
@@ -228,10 +228,42 @@ extension NnReminderManagerTests {
         let requests = NotificationRequestFactory.makeMultiTriggerReminderRequests(for: reminder)
         let (sut, center) = makeSUT(pendingRequests: requests)
 
-        await sut.cancelReminders(identifier: id)
+        await sut.cancelReminders(identifiers: [id])
 
         #expect(center.idsToRemove.allSatisfy { $0.hasPrefix(id.uuidString) })
         #expect(center.idsToRemove.count == 3)
+    }
+    
+    @Test("Cancels reminders for multiple base IDs")
+    func cancelsRemindersForMultipleBaseIDs() async {
+        let id1 = UUID()
+        let id2 = UUID()
+        
+        let reminder1 = makeWeekdayReminder(id: id1, daysOfWeek: [.tuesday])
+        let reminder2 = makeCountdownReminder(id: id2)
+        
+        let requests = NotificationRequestFactory.makeMultiTriggerReminderRequests(for: reminder1)
+        + [NotificationRequestFactory.makeCountdownReminderRequest(for: reminder2)]
+        
+        let (sut, center) = makeSUT(pendingRequests: requests)
+        
+        await sut.cancelReminders(identifiers: [id1, id2])
+        
+        #expect(center.idsToRemove.contains(where: { $0.hasPrefix(id1.uuidString) }))
+        #expect(center.idsToRemove.contains(where: { $0.hasPrefix(id2.uuidString) }))
+        #expect(center.idsToRemove.count == requests.count)
+    }
+    
+    @Test("Does not cancel reminders if no base IDs match")
+    func doesNotCancelIfNoBaseIDsMatch() async {
+        let id = UUID()
+        let unrelatedReminder = makeCountdownReminder(id: UUID())
+        let unrelatedRequest = NotificationRequestFactory.makeCountdownReminderRequest(for: unrelatedReminder)
+        let (sut, center) = makeSUT(pendingRequests: [unrelatedRequest])
+        
+        await sut.cancelReminders(identifiers: [id])
+        
+        #expect(center.idsToRemove.isEmpty)
     }
 }
 
