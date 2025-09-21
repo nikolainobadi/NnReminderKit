@@ -56,7 +56,9 @@ xcodebuild test -scheme NnReminderKit -destination 'platform=iOS Simulator,name=
 - `MultiTriggerReminder`: Protocol for reminders that create multiple notifications
 
 **SwiftUI Integration** (`Sources/NnReminderKit/SwiftUI/`)
-- `ReminderPermissionRequestViewModifier`: View modifier for permission requests
+- `OptionalReminderPermissionViewModifier`: View modifier that allows content access regardless of permission status
+- `RequiredReminderPermissionViewModifier`: View modifier that blocks content until permissions are granted
+- `ReminderPermissionRequestViewModifier`: DEPRECATED - use optional or required modifiers instead
 - `ReminderPermissionENV`: Environment key for permission state management
 
 ### Testing Architecture
@@ -82,4 +84,7 @@ Location-based reminders are iOS-only. Use `#if os(iOS)` compilation directives 
 GitHub Actions workflow (`ci.yml`) runs tests on both iOS and macOS platforms in parallel using Xcode 16.2.
 
 ### SwiftUI Permission Handling
-The `.requestReminderPermissions()` view modifier automatically handles authorization states and provides direct navigation to Settings when permissions are denied.
+Two view modifiers are available for handling notification permissions:
+- `.optionalNotificationPermissionsRequest()`: Shows content regardless of permission status, only prompts when not determined
+- `.requiredNotificationPermissionsRequest()`: Blocks content until permissions are granted, shows denied view when rejected
+Both modifiers automatically handle authorization states and provide direct navigation to Settings when permissions are denied.

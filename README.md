@@ -49,20 +49,41 @@ Add the following dependency to your `Package.swift`:
 
 ## Usage
 
-### Handling Notification Permissions with Ease  
+### Handling Notification Permissions with Ease
 
-Apply the `.requestReminderPermissions` SwiftUI view modifier to prompt users for notification permissions with built-in explanation and fallback UI:
+#### Optional Notifications (Content Always Accessible)
+Use `.optionalNotificationPermissionsRequest` when notifications enhance but aren't essential for your app:
 
 ```swift
-NotificationContent()
-    .requestReminderPermissions(
+ContentView()
+    .optionalNotificationPermissionsRequest(
         options: [.alert, .badge, .sound],
         detailView: { requestPermission in
             VStack {
+                Text("Enable notifications to get reminders")
+                Button("Enable Notifications", action: requestPermission)
+                Button("Maybe Later") {
+                    // Dismiss without requesting
+                }
+            }
+        }
+    )
+```
+
+#### Required Notifications (Content Blocked Until Granted)
+Use `.requiredNotificationPermissionsRequest` when notifications are essential for core functionality:
+
+```swift
+ReminderAppContent()
+    .requiredNotificationPermissionsRequest(
+        options: [.alert, .badge, .sound],
+        detailView: { requestPermission in
+            VStack {
+                Text("Notifications are required for this app to function")
                 Button("Enable Notifications", action: requestPermission)
             }
         },
-        deniedView: { settingsURL in 
+        deniedView: { settingsURL in
             VStack {
                 Text("Notifications are disabled. Please enable them in settings.")
                 if let url = settingsURL {
