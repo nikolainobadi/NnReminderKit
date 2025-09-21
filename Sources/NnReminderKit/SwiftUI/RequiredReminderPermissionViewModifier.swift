@@ -15,25 +15,27 @@ struct RequiredReminderPermissionViewModifier<DetailView: View, DeniedView: View
     let detailView: (@escaping () -> Void) -> DetailView
 
     func body(content: Content) -> some View {
-        switch permissionENV.status {
-        case .authorized, .provisional:
-            content
-        case .notDetermined:
-            detailView {
-                Task {
-                    await permissionENV.requestPermission()
+        Group {
+            switch permissionENV.status {
+            case .authorized, .provisional:
+                content
+            case .notDetermined:
+                detailView {
+                    Task {
+                        await permissionENV.requestPermission()
+                    }
                 }
+            default:
+                #if canImport(UIKit)
+                    deniedView(URL(string: UIApplication.openSettingsURLString))
+                #else
+                // TODO: - not sure if there is a mac equivalent for notification settings
+                    deniedView(nil)
+                #endif
             }
-            .task {
-                await permissionENV.checkPermissionStatus()
-            }
-        default:
-            #if canImport(UIKit)
-                deniedView(URL(string: UIApplication.openSettingsURLString))
-            #else
-            // TODO: - not sure if there is a mac equivalent for notification settings
-                deniedView(nil)
-            #endif
+        }
+        .task {
+            await permissionENV.checkPermissionStatus()
         }
     }
 }

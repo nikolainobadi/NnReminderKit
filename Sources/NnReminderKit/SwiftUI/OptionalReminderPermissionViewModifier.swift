@@ -29,12 +29,12 @@ struct OptionalReminderPermissionViewModifier<DetailView: View>: ViewModifier {
                         await permissionENV.requestPermission()
                     }
                 }
-                .task {
-                    await permissionENV.checkPermissionStatus()
-                }
             default:
                 content
             }
+        }
+        .task {
+            await permissionENV.checkPermissionStatus()
         }
         .onChange(of: permissionENV.status) { _, newStatus in
             switch newStatus {
