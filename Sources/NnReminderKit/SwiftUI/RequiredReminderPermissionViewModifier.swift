@@ -9,10 +9,17 @@ import SwiftUI
 import UserNotifications
 
 struct RequiredReminderPermissionViewModifier<DetailView: View, DeniedView: View>: ViewModifier {
-    @StateObject var permissionENV: ReminderPermissionENV
+    @StateObject private var permissionENV: ReminderPermissionENV
 
-    let deniedView: (URL?) -> DeniedView
-    let detailView: (@escaping () -> Void) -> DetailView
+    private let deniedView: (URL?) -> DeniedView
+    private let detailView: (@escaping () -> Void) -> DetailView
+    
+    init(permissionENV: @autoclosure @escaping () -> ReminderPermissionENV, @ViewBuilder detailView: @escaping (@escaping () -> Void) -> DetailView,
+         @ViewBuilder deniedView: @escaping (URL?) -> DeniedView) {
+        self.deniedView = deniedView
+        self.detailView = detailView
+        self._permissionENV = .init(wrappedValue: permissionENV())
+    }
 
     func body(content: Content) -> some View {
         Group {
@@ -65,8 +72,8 @@ public extension View {
         modifier(
             RequiredReminderPermissionViewModifier(
                 permissionENV: .init(delegate: NnReminderManager(), options: options),
-                deniedView: deniedView,
-                detailView: detailView
+                detailView: detailView,
+                deniedView: deniedView
             )
         )
     }
