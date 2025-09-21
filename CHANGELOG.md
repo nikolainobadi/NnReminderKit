@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-09-21
+
+### Added
+- `LocationReminder` for geofenced notifications (iOS only)
+- `FutureDateReminder` type for scheduling notifications on specific future dates
+- `MultiTriggerReminder` protocol for reminders that create multiple notifications
+- `TriggerInfoFactory` for managing multi-trigger reminder logic
+- `OptionalReminderPermissionViewModifier` for non-blocking permission requests with binding support
+- `RequiredReminderPermissionViewModifier` for content-blocking permission requests
+- `ShowNotificationSettingsButton` reusable component for opening system notification settings
+- `PermissionModifierHelpers` utility for reducing code duplication in SwiftUI modifiers
+- Enhanced CI/CD workflow with parallel iOS and macOS testing
+- Comprehensive unit tests for new reminder types and permission handling
+- `CLAUDE.md` documentation for project architecture and build instructions
+
+### Changed
+- Renamed `CalendarReminder` back to `WeekdayReminder` for clarity
+- Enhanced SwiftUI permission handling with separate optional and required modifiers
+- Updated minimum macOS version requirement to 14.0
+- Improved CI workflow with matrix builds and xcpretty formatting
+- Expanded `NnReminderManager` with methods for location and future date reminders
+- Enhanced documentation with comprehensive usage examples
+
+### Deprecated
+- `requestReminderPermissions` view modifier (use `optionalNotificationPermissionsRequest` or `requiredNotificationPermissionsRequest` instead)
+
 ## [1.0.0] - 2025-04-02
 
 ### Changed
@@ -69,7 +95,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Date formatting extensions
 - Preview helpers for SwiftUI development
 
-[Unreleased]: https://github.com/nikolainobadi/NnReminderKit/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/nikolainobadi/NnReminderKit/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/nikolainobadi/NnReminderKit/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/nikolainobadi/NnReminderKit/compare/v0.8.0...v1.0.0
 [0.8.0]: https://github.com/nikolainobadi/NnReminderKit/compare/v0.5.1...v0.8.0
 [0.5.1]: https://github.com/nikolainobadi/NnReminderKit/compare/v0.5.0...v0.5.1
