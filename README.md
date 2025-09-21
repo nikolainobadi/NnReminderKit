@@ -51,23 +51,34 @@ Add the following dependency to your `Package.swift`:
 
 ### Handling Notification Permissions with Ease
 
-#### Optional Notifications (Content Always Accessible)
-Use `.optionalNotificationPermissionsRequest` when notifications enhance but aren't essential for your app:
+#### Optional Notifications (Shows Content After Permission Decision)
+Use `.optionalNotificationPermissionsRequest` when notifications enhance but aren't essential for your app. This modifier requests permissions first, then shows content regardless of the user's decision:
 
 ```swift
-ContentView()
-    .optionalNotificationPermissionsRequest(
-        options: [.alert, .badge, .sound],
-        detailView: { requestPermission in
-            VStack {
-                Text("Enable notifications to get reminders")
-                Button("Enable Notifications", action: requestPermission)
-                Button("Maybe Later") {
-                    // Dismiss without requesting
+struct ContentView: View {
+    @State private var notificationsGranted = false
+
+    var body: some View {
+        YourMainContent()
+            .optionalNotificationPermissionsRequest(
+                permissionGranted: $notificationsGranted,
+                options: [.alert, .badge, .sound],
+                detailView: { requestPermission in
+                    VStack {
+                        Text("Enable notifications to get reminders")
+                        Button("Enable Notifications", action: requestPermission)
+                        Button("Skip") {
+                            // User can skip - will show content with notificationsGranted = false
+                            requestPermission() // This will set permission to denied
+                        }
+                    }
                 }
+            )
+            .onChange(of: notificationsGranted) { _, granted in
+                print("Notifications \(granted ? "enabled" : "disabled")")
             }
-        }
-    )
+    }
+}
 ```
 
 #### Required Notifications (Content Blocked Until Granted)
@@ -86,14 +97,24 @@ ReminderAppContent()
         deniedView: { settingsURL in
             VStack {
                 Text("Notifications are disabled. Please enable them in settings.")
-                if let url = settingsURL {
-                    Button("Open Settings") {
-                        UIApplication.shared.open(url)
-                    }
+                ShowNotificationSettingsButton {
+                    Text("Open Settings")
                 }
             }
         }
     )
+```
+
+#### Standalone Settings Button
+Use the `ShowNotificationSettingsButton` component anywhere in your app:
+
+```swift
+ShowNotificationSettingsButton() // Uses default "Open Settings" text
+
+// Or with custom content:
+ShowNotificationSettingsButton {
+    Label("Notification Settings", systemImage: "gear")
+}
 ```
 
 ### Manual Requesting Notification Permissions
