@@ -136,10 +136,84 @@ extension NnReminderManagerTests {
         let sut = makeSUT(pendingRequests: requests).sut
         let loadedReminders = await sut.loadAllWeekdayReminders()
         let reminder = try #require(loadedReminders.first)
-        
+
         #expect(requests.count == daysOfWeek.count)
         #expect(loadedReminders.count == 1)
         #expect(reminder.daysOfWeek.count == daysOfWeek.count)
+    }
+}
+
+
+// MARK: - WeekdayReminder (Daily Reminders)
+extension NnReminderManagerTests {
+    @Test("Schedules daily reminder with empty daysOfWeek array")
+    func schedulesDailyReminderWithEmptyArray() async throws {
+        let (sut, center) = makeSUT()
+        let dailyReminder = makeWeekdayReminder(daysOfWeek: [])
+
+        try await sut.scheduleWeekdayReminder(dailyReminder)
+
+        #expect(center.addedRequests.count == 1)
+        let request = try #require(center.addedRequests.first)
+        let trigger = try #require(request.trigger as? UNCalendarNotificationTrigger)
+        #expect(trigger.repeats)
+
+        let components = trigger.dateComponents
+        #expect(components.weekday == nil)
+        #expect(components.hour != nil)
+        #expect(components.minute != nil)
+    }
+
+    @Test("Schedules one-time reminder with empty daysOfWeek and repeating false")
+    func schedulesOneTimeReminderWithEmptyArray() async throws {
+        let (sut, center) = makeSUT()
+        let oneTimeReminder = makeWeekdayReminder(repeating: false, daysOfWeek: [])
+
+        try await sut.scheduleWeekdayReminder(oneTimeReminder)
+
+        #expect(center.addedRequests.count == 1)
+        let request = try #require(center.addedRequests.first)
+        let trigger = try #require(request.trigger as? UNCalendarNotificationTrigger)
+        #expect(!trigger.repeats)
+    }
+
+    @Test("Loads daily reminder with empty daysOfWeek")
+    func loadsDailyReminderWithEmptyArray() async throws {
+        let pendingReminder = makeWeekdayReminder(daysOfWeek: [])
+        let requests = NotificationRequestFactory.makeMultiTriggerReminderRequests(for: pendingReminder)
+        let sut = makeSUT(pendingRequests: requests).sut
+
+        let loadedReminders = await sut.loadAllWeekdayReminders()
+        let reminder = try #require(loadedReminders.first)
+
+        #expect(requests.count == 1)
+        #expect(loadedReminders.count == 1)
+        #expect(reminder.daysOfWeek.isEmpty)
+        #expect(reminder.repeating)
+    }
+
+    @Test("Convenience factory: WeekdayReminder.daily creates daily reminder")
+    func dailyFactoryMethodCreatesCorrectReminder() async throws {
+        let (sut, center) = makeSUT()
+        let dailyReminder = WeekdayReminder.daily(title: "Daily Reminder", message: "Every day", time: Date.createReminderTime(hour: 9, minute: 0))
+
+        try await sut.scheduleWeekdayReminder(dailyReminder)
+
+        #expect(center.addedRequests.count == 1)
+        #expect(dailyReminder.daysOfWeek.isEmpty)
+        #expect(dailyReminder.repeating)
+    }
+
+    @Test("Convenience factory: WeekdayReminder.oneTime creates non-repeating reminder")
+    func oneTimeFactoryMethodCreatesCorrectReminder() async throws {
+        let (sut, center) = makeSUT()
+        let oneTimeReminder = WeekdayReminder.oneTime(title: "One Time", message: "Fires once", time: Date.createReminderTime(hour: 14, minute: 30))
+
+        try await sut.scheduleWeekdayReminder(oneTimeReminder)
+
+        #expect(center.addedRequests.count == 1)
+        #expect(oneTimeReminder.daysOfWeek.isEmpty)
+        #expect(!oneTimeReminder.repeating)
     }
 }
 

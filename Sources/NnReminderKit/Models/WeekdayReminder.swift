@@ -8,7 +8,47 @@ import Foundation
 import UserNotifications
 
 /// A reminder that is scheduled for a specific time on specific days of the week.
-/// This is typically used for recurring reminders, such as daily or weekly notifications.
+///
+/// For recurring reminders on specific weekdays, provide an array of `DayOfWeek` values.
+/// For **daily reminders** (every day at the same time), pass an empty array to `daysOfWeek`.
+///
+/// ## Examples
+///
+/// ### Weekday Reminder (Monday, Wednesday, Friday at 9:00 AM)
+/// ```swift
+/// WeekdayReminder(
+///     id: UUID(),
+///     title: "Workout",
+///     message: "Time for exercise",
+///     time: nineAM,
+///     repeating: true,
+///     daysOfWeek: [.monday, .wednesday, .friday]
+/// )
+/// ```
+///
+/// ### Daily Reminder (Every day at 9:00 AM)
+/// ```swift
+/// WeekdayReminder(
+///     id: UUID(),
+///     title: "Daily Standup",
+///     message: "Team meeting time",
+///     time: nineAM,
+///     repeating: true,
+///     daysOfWeek: []  // Empty array = daily reminder
+/// )
+/// ```
+///
+/// ### One-Time Reminder (Next occurrence of 9:00 AM)
+/// ```swift
+/// WeekdayReminder(
+///     id: UUID(),
+///     title: "One-time alert",
+///     message: "This fires once",
+///     time: nineAM,
+///     repeating: false,
+///     daysOfWeek: []  // Fires at next 9:00 AM, then removes itself
+/// )
+/// ```
 public struct WeekdayReminder: MultiTriggerReminder {
     public let id: UUID
     public let title: String
@@ -21,6 +61,13 @@ public struct WeekdayReminder: MultiTriggerReminder {
     public let interruptionLevel: UNNotificationInterruptionLevel
     public let time: Date
     public let repeating: Bool
+
+    /// The days of the week when this reminder should trigger.
+    ///
+    /// - For specific weekdays: Provide an array like `[.monday, .wednesday, .friday]`
+    /// - For daily reminders: Pass an empty array `[]`
+    /// - Each specified day creates a separate recurring notification
+    /// - An empty array creates a single daily recurring notification
     public let daysOfWeek: [DayOfWeek]
 
     /// Initializes a `WeekdayReminder` with the given properties.
