@@ -91,3 +91,19 @@ Two view modifiers are available for handling notification permissions:
 - `ShowNotificationSettingsButton`: Standalone component for navigating to system notification settings
 
 Both modifiers automatically handle authorization states. The required modifier provides direct navigation to Settings when permissions are denied.
+
+## Public API Expectations
+- Clear, well-documented public interfaces
+- Semantic versioning for breaking changes
+- Comprehensive examples in documentation
+
+## Package Testing
+- Behavior-driven unit tests (Swift Testing preferred)
+- Use `makeSUT` pattern for test organization
+- Track memory leaks with `trackForMemoryLeaks`
+- Type-safe assertions (`#expect`, `#require`)
+- Use `waitUntil` for async/reactive testing
+
+## Imports
+@~/.claude/guidelines/style/shared-formatting-claude.md
+@~/.claude/guidelines/testing/base_unit_testing_guidelines.md
