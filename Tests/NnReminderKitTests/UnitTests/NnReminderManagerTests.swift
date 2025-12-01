@@ -215,6 +215,66 @@ extension NnReminderManagerTests {
         #expect(oneTimeReminder.daysOfWeek.isEmpty)
         #expect(!oneTimeReminder.repeating)
     }
+
+    @Test("Loads only daily reminders using loadAllDailyReminders")
+    func loadsOnlyDailyReminders() async throws {
+        let dailyReminder = makeWeekdayReminder(repeating: true, daysOfWeek: [])
+        let oneTimeReminder = makeWeekdayReminder(repeating: false, daysOfWeek: [])
+        let weeklyReminder = makeWeekdayReminder(repeating: true, daysOfWeek: [.monday, .wednesday])
+
+        let dailyRequests = NotificationRequestFactory.makeMultiTriggerReminderRequests(for: dailyReminder)
+        let oneTimeRequests = NotificationRequestFactory.makeMultiTriggerReminderRequests(for: oneTimeReminder)
+        let weeklyRequests = NotificationRequestFactory.makeMultiTriggerReminderRequests(for: weeklyReminder)
+
+        let allRequests = dailyRequests + oneTimeRequests + weeklyRequests
+        let sut = makeSUT(pendingRequests: allRequests).sut
+
+        let loadedDailyReminders = await sut.loadAllDailyReminders()
+
+        #expect(loadedDailyReminders.count == 1)
+        #expect(loadedDailyReminders.first?.daysOfWeek.isEmpty == true)
+        #expect(loadedDailyReminders.first?.repeating == true)
+    }
+
+    @Test("Loads only one-time reminders using loadAllOneTimeReminders")
+    func loadsOnlyOneTimeReminders() async throws {
+        let dailyReminder = makeWeekdayReminder(repeating: true, daysOfWeek: [])
+        let oneTimeReminder = makeWeekdayReminder(repeating: false, daysOfWeek: [])
+        let weeklyReminder = makeWeekdayReminder(repeating: true, daysOfWeek: [.monday, .wednesday])
+
+        let dailyRequests = NotificationRequestFactory.makeMultiTriggerReminderRequests(for: dailyReminder)
+        let oneTimeRequests = NotificationRequestFactory.makeMultiTriggerReminderRequests(for: oneTimeReminder)
+        let weeklyRequests = NotificationRequestFactory.makeMultiTriggerReminderRequests(for: weeklyReminder)
+
+        let allRequests = dailyRequests + oneTimeRequests + weeklyRequests
+        let sut = makeSUT(pendingRequests: allRequests).sut
+
+        let loadedOneTimeReminders = await sut.loadAllOneTimeReminders()
+
+        #expect(loadedOneTimeReminders.count == 1)
+        #expect(loadedOneTimeReminders.first?.daysOfWeek.isEmpty == true)
+        #expect(loadedOneTimeReminders.first?.repeating == false)
+    }
+
+    @Test("Loads only weekly reminders using loadAllWeeklyReminders")
+    func loadsOnlyWeeklyReminders() async throws {
+        let dailyReminder = makeWeekdayReminder(repeating: true, daysOfWeek: [])
+        let oneTimeReminder = makeWeekdayReminder(repeating: false, daysOfWeek: [])
+        let weeklyReminder = makeWeekdayReminder(repeating: true, daysOfWeek: [.monday, .wednesday])
+
+        let dailyRequests = NotificationRequestFactory.makeMultiTriggerReminderRequests(for: dailyReminder)
+        let oneTimeRequests = NotificationRequestFactory.makeMultiTriggerReminderRequests(for: oneTimeReminder)
+        let weeklyRequests = NotificationRequestFactory.makeMultiTriggerReminderRequests(for: weeklyReminder)
+
+        let allRequests = dailyRequests + oneTimeRequests + weeklyRequests
+        let sut = makeSUT(pendingRequests: allRequests).sut
+
+        let loadedWeeklyReminders = await sut.loadAllWeeklyReminders()
+
+        #expect(loadedWeeklyReminders.count == 1)
+        #expect(loadedWeeklyReminders.first?.daysOfWeek.isEmpty == false)
+        #expect(loadedWeeklyReminders.first?.daysOfWeek.count == 2)
+    }
 }
 
 

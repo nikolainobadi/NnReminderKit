@@ -273,9 +273,15 @@ await reminderManager.cancelAllReminders()
 
 ```swift
 Task {
+    // Load by reminder type
     let countdownReminders = await reminderManager.loadAllCountdownReminders()
     let weekdayReminders = await reminderManager.loadAllWeekdayReminders()
-    let locationReminders = await reminderManager.loAdAllLocationReminders()
+    let locationReminders = await reminderManager.loadAllLocationReminders()
+
+    // Load specific weekday reminder categories
+    let dailyReminders = await reminderManager.loadAllDailyReminders()        // Empty days, repeating
+    let oneTimeReminders = await reminderManager.loadAllOneTimeReminders()    // Empty days, not repeating
+    let weeklyReminders = await reminderManager.loadAllWeeklyReminders()      // Specific days
 }
 ```
 

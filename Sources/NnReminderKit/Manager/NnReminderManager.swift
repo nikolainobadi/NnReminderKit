@@ -252,6 +252,30 @@ public extension NnReminderManager {
             )
         }
     }
+
+    /// Loads all daily repeating reminders (reminders with empty daysOfWeek and repeating = true).
+    ///
+    /// - Returns: An array of `WeekdayReminder` instances configured as daily repeating reminders.
+    func loadAllDailyReminders() async -> [WeekdayReminder] {
+        let allReminders = await loadAllWeekdayReminders()
+        return allReminders.filter { $0.daysOfWeek.isEmpty && $0.repeating }
+    }
+
+    /// Loads all one-time reminders (reminders with empty daysOfWeek and repeating = false).
+    ///
+    /// - Returns: An array of `WeekdayReminder` instances configured as one-time reminders.
+    func loadAllOneTimeReminders() async -> [WeekdayReminder] {
+        let allReminders = await loadAllWeekdayReminders()
+        return allReminders.filter { $0.daysOfWeek.isEmpty && !$0.repeating }
+    }
+
+    /// Loads all weekly reminders (reminders with specific days of the week).
+    ///
+    /// - Returns: An array of `WeekdayReminder` instances configured for specific weekdays.
+    func loadAllWeeklyReminders() async -> [WeekdayReminder] {
+        let allReminders = await loadAllWeekdayReminders()
+        return allReminders.filter { !$0.daysOfWeek.isEmpty }
+    }
 }
 
 

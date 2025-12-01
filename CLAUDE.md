@@ -126,6 +126,24 @@ let oneTime = WeekdayReminder.oneTime(
 
 This creates a single `UNCalendarNotificationTrigger` with only hour/minute components (no weekday), which iOS interprets as a daily trigger.
 
+**Loading Reminders by Category:**
+
+NnReminderKit provides convenience methods to load specific categories of weekday reminders:
+
+```swift
+// Load all daily repeating reminders (empty days, repeating = true)
+let dailyReminders = await manager.loadAllDailyReminders()
+
+// Load all one-time reminders (empty days, repeating = false)
+let oneTimeReminders = await manager.loadAllOneTimeReminders()
+
+// Load all weekly reminders (specific days)
+let weeklyReminders = await manager.loadAllWeeklyReminders()
+
+// Load all weekday reminders (all categories)
+let allWeekdayReminders = await manager.loadAllWeekdayReminders()
+```
+
 ## Public API Expectations
 - Clear, well-documented public interfaces
 - Semantic versioning for breaking changes
