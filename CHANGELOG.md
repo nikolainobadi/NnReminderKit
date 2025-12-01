@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2025-12-01
+
+### Added
+- Daily repeating reminders using `WeekdayReminder` with empty `daysOfWeek` array
+- One-time reminders that fire once at the next occurrence of a specific time
+- Convenience factory method `WeekdayReminder.daily()` for creating daily repeating reminders
+- Convenience factory method `WeekdayReminder.oneTime()` for creating one-time reminders
+- `loadAllDailyReminders()` method to load only daily repeating reminders
+- `loadAllOneTimeReminders()` method to load only one-time reminders
+- `loadAllWeeklyReminders()` method to load only weekly reminders with specific days
+- Comprehensive documentation for daily reminder patterns in README and CLAUDE.md
+
+### Fixed
+- `WeekdayReminder` now correctly respects the `repeating` flag when creating one-time reminders
+
 ## [1.1.0] - 2025-09-21
 
 ### Added

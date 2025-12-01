@@ -8,25 +8,25 @@
 **NnReminderKit** is a Swift package designed to simplify the scheduling and management of local notifications, including countdown, calendar-based, and location-based reminders. It provides a clean, SwiftUI-friendly API for handling permissions, scheduling, canceling, and loading pending reminders.
 
 ## Table of Contents
-- [Features](#features)  
-- [Installation](#installation)  
-- [Usage](#usage)  
-  - [Handling Notification Permissions](#handling-notification-permissions-with-ease)  
-  - [Manually Requesting Notification Permissions](#manual-requesting-notification-permissions)  
-  - [Scheduling a Countdown Reminder](#scheduling-a-countdown-reminder)  
-  - [Creating Reminder Times](#creating-reminder-times)  
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Handling Notification Permissions](#handling-notification-permissions-with-ease)
+  - [Manually Requesting Notification Permissions](#manual-requesting-notification-permissions)
+  - [Scheduling a Countdown Reminder](#scheduling-a-countdown-reminder)
+  - [Creating Reminder Times](#creating-reminder-times)
   - [Scheduling a Calendar Reminder](#scheduling-a-calendar-reminder)
     - [Same Time for Multiple Days](#scheduling-a-calendar-reminder-at-same-time-for-multiple-days)
     - [Different Times per Day](#scheduling-calendar-reminders-with-different-times-per-day)
     - [Daily Reminders](#daily-reminders)
-  - [Scheduling a Location Reminder](#scheduling-a-location-reminder)  
-  - [Canceling Reminders](#canceling-reminders)  
-  - [Loading Pending Reminders](#loading-pending-reminders)  
-- [Architecture Notes](#architecture-notes)  
-- [Documentation](#documentation)   
-- [About This Project](#about-this-project)  
-- [Contributing](#contributing)  
-- [License](#license)  
+  - [Scheduling a Location Reminder](#scheduling-a-location-reminder)
+  - [Canceling Reminders](#canceling-reminders)
+  - [Loading Pending Reminders](#loading-pending-reminders)
+- [Architecture Notes](#architecture-notes)
+- [Documentation](#documentation)
+- [About This Project](#about-this-project)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Features
 
@@ -46,7 +46,7 @@
 Add the following dependency to your `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/nikolainobadi/NnReminderKit", from: "1.0.0")
+.package(url: "https://github.com/nikolainobadi/NnReminderKit", from: "1.2.0")
 ```
 
 ## Usage
@@ -303,7 +303,7 @@ NnReminderKit was built to reduce the boilerplate involved in managing local not
 
 ## Contributing
 
-Contributions, feedback, and feature requests are welcome!  
+Contributions, feedback, and feature requests are welcome!
 To contribute:
 - Fork the repository
 - [Open an issue](https://github.com/nikolainobadi/NnReminderKit/issues) or [discussion](https://github.com/nikolainobadi/NnReminderKit/discussions) to propose changes
