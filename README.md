@@ -15,9 +15,10 @@
   - [Manually Requesting Notification Permissions](#manual-requesting-notification-permissions)  
   - [Scheduling a Countdown Reminder](#scheduling-a-countdown-reminder)  
   - [Creating Reminder Times](#creating-reminder-times)  
-  - [Scheduling a Calendar Reminder](#scheduling-a-calendar-reminder)  
-    - [Same Time for Multiple Days](#scheduling-a-calendar-reminder-at-same-time-for-multiple-days)  
-    - [Different Times per Day](#scheduling-calendar-reminders-with-different-times-per-day)  
+  - [Scheduling a Calendar Reminder](#scheduling-a-calendar-reminder)
+    - [Same Time for Multiple Days](#scheduling-a-calendar-reminder-at-same-time-for-multiple-days)
+    - [Different Times per Day](#scheduling-calendar-reminders-with-different-times-per-day)
+    - [Daily Reminders](#daily-reminders)
   - [Scheduling a Location Reminder](#scheduling-a-location-reminder)  
   - [Canceling Reminders](#canceling-reminders)  
   - [Loading Pending Reminders](#loading-pending-reminders)  
@@ -32,6 +33,7 @@
 - Request and handle notification permissions with SwiftUI view modifiers.
 - Schedule and cancel countdown (one-time) reminders.
 - Schedule and cancel calendar-based (recurring) weekday reminders.
+- Schedule daily repeating reminders or one-time reminders at specific times.
 - Schedule and manage location-based reminders.
 - Load all pending reminders with detailed metadata.
 - Clean abstraction for unit testing and previewing reminder behavior.
@@ -192,6 +194,49 @@ try await reminderManager.scheduleWeekdayReminder(mondayReminder)
 try await reminderManager.scheduleWeekdayReminder(weekendReminder)
 ```
 
+#### Daily Reminders
+
+To create a reminder that fires every day at the same time, use `WeekdayReminder` with an empty `daysOfWeek` array. This creates a single notification that repeats daily.
+
+**Using the convenience factory method:**
+
+```swift
+let dailyReminder = WeekdayReminder.daily(
+    title: "Daily Standup",
+    message: "Time for the daily meeting",
+    time: Date.createReminderTime(hour: 9, minute: 0)
+)
+
+try await reminderManager.scheduleWeekdayReminder(dailyReminder)
+```
+
+**One-time reminder (fires once at the next occurrence):**
+
+```swift
+let oneTimeReminder = WeekdayReminder.oneTime(
+    title: "Important Meeting",
+    message: "Don't forget!",
+    time: Date.createReminderTime(hour: 14, minute: 30)
+)
+
+try await reminderManager.scheduleWeekdayReminder(oneTimeReminder)
+```
+
+**Using the standard initializer:**
+
+```swift
+let dailyReminder = WeekdayReminder(
+    id: UUID(),
+    title: "Exercise",
+    message: "Time to workout",
+    time: Date.createReminderTime(hour: 7, minute: 0),
+    repeating: true,
+    daysOfWeek: []  // Empty array = daily reminder
+)
+
+try await reminderManager.scheduleWeekdayReminder(dailyReminder)
+```
+
 ### Scheduling a Location Reminder
 
 ```swift
@@ -238,7 +283,10 @@ Task {
 
 NnReminderKit is organized around a central `NnReminderManager` class that abstracts `UNUserNotificationCenter` interactions. It supports three primary reminder types:
 - `CountdownReminder` for time-interval-based alerts
-- `WeekdayReminder` for calendar-based repetition
+- `WeekdayReminder` for calendar-based repetition, including:
+  - Weekly reminders on specific weekdays
+  - Daily repeating reminders (empty `daysOfWeek` array)
+  - One-time reminders at specific times
 - `LocationReminder` for geofenced alerts
 
 The permission handling is implemented using a SwiftUI-first approach with composable modifiers.
