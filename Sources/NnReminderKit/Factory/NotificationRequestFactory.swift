@@ -47,7 +47,7 @@ enum NotificationRequestFactory {
 // MARK: - Private Methods
 private extension NotificationRequestFactory {
     static func makeRecurringTrigger(_ info: TriggerInfo) -> UNCalendarNotificationTrigger {
-        return .init(dateMatching: info.components, repeats: true)
+        return .init(dateMatching: info.components, repeats: info.repeating)
     }
     
     #if os(iOS)

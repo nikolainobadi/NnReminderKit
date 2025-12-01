@@ -51,6 +51,9 @@ xcodebuild test -scheme NnReminderKit -destination 'platform=iOS Simulator,name=
 - `Reminder`: Base protocol for all reminder types
 - `CountdownReminder`: Time-interval based notifications
 - `WeekdayReminder`: Recurring calendar-based notifications (multi-trigger)
+  - Pass specific weekdays for weekly reminders
+  - Pass empty `daysOfWeek` array for daily reminders (fires every day at specified time)
+  - Set `repeating: false` for one-time reminders (fires once at next occurrence)
 - `LocationReminder`: Geofenced notifications (iOS only)
 - `FutureDateReminder`: Future date notifications (multi-trigger)
 - `MultiTriggerReminder`: Protocol for reminders that create multiple notifications
@@ -91,3 +94,68 @@ Two view modifiers are available for handling notification permissions:
 - `ShowNotificationSettingsButton`: Standalone component for navigating to system notification settings
 
 Both modifiers automatically handle authorization states. The required modifier provides direct navigation to Settings when permissions are denied.
+
+### Daily Reminder Pattern
+To create a daily reminder that fires every day at the same time, use `WeekdayReminder` with an empty `daysOfWeek` array:
+
+```swift
+// Daily repeating reminder
+let daily = WeekdayReminder(
+    id: UUID(),
+    title: "Daily Standup",
+    message: "Time for the daily meeting",
+    time: nineAM,
+    repeating: true,
+    daysOfWeek: []  // Empty = daily
+)
+
+// Or use convenience factory
+let daily = WeekdayReminder.daily(
+    title: "Daily Standup",
+    message: "Time for the daily meeting",
+    time: nineAM
+)
+
+// One-time reminder (fires once)
+let oneTime = WeekdayReminder.oneTime(
+    title: "Reminder",
+    message: "Fires at next 9:00 AM",
+    time: nineAM
+)
+```
+
+This creates a single `UNCalendarNotificationTrigger` with only hour/minute components (no weekday), which iOS interprets as a daily trigger.
+
+**Loading Reminders by Category:**
+
+NnReminderKit provides convenience methods to load specific categories of weekday reminders:
+
+```swift
+// Load all daily repeating reminders (empty days, repeating = true)
+let dailyReminders = await manager.loadAllDailyReminders()
+
+// Load all one-time reminders (empty days, repeating = false)
+let oneTimeReminders = await manager.loadAllOneTimeReminders()
+
+// Load all weekly reminders (specific days)
+let weeklyReminders = await manager.loadAllWeeklyReminders()
+
+// Load all weekday reminders (all categories)
+let allWeekdayReminders = await manager.loadAllWeekdayReminders()
+```
+
+## Public API Expectations
+- Clear, well-documented public interfaces
+- Semantic versioning for breaking changes
+- Comprehensive examples in documentation
+
+## Package Testing
+- Behavior-driven unit tests (Swift Testing preferred)
+- Use `makeSUT` pattern for test organization
+- Track memory leaks with `trackForMemoryLeaks`
+- Type-safe assertions (`#expect`, `#require`)
+- Use `waitUntil` for async/reactive testing
+
+## Imports
+@~/.claude/guidelines/style/shared-formatting-claude.md
+@~/.claude/guidelines/testing/base_unit_testing_guidelines.md

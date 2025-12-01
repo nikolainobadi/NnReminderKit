@@ -13,14 +13,16 @@ enum TriggerInfoFactory {
 
         let primary = TriggerInfo(
             id: "\(reminder.id)_\(reminder.primaryDate.displayableDate)_primary",
-            components: reminder.primaryDate.dateComponents
+            components: reminder.primaryDate.dateComponents,
+            repeating: false
         )
         results.append(primary)
 
         for date in reminder.additionalDates {
             let trigger = TriggerInfo(
                 id: "\(reminder.id)_\(date.displayableDate)",
-                components: date.dateComponents
+                components: date.dateComponents,
+                repeating: false
             )
             results.append(trigger)
         }
@@ -34,7 +36,7 @@ enum TriggerInfoFactory {
 
         if reminder.daysOfWeek.isEmpty {
             return [
-                TriggerInfo(id: baseId, components: timeComponents)
+                TriggerInfo(id: baseId, components: timeComponents, repeating: reminder.repeating)
             ]
         }
 
@@ -44,7 +46,8 @@ enum TriggerInfoFactory {
 
             return TriggerInfo(
                 id: "\(baseId)_\(day.name)",
-                components: components
+                components: components,
+                repeating: true
             )
         }
     }

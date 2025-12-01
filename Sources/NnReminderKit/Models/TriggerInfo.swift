@@ -13,7 +13,10 @@ import Foundation
 struct TriggerInfo {
     /// The unique identifier for the notification trigger.
     let id: String
-    
+
     /// The date components that determine when the notification will be triggered.
     let components: DateComponents
+
+    /// Whether the notification should repeat.
+    let repeating: Bool
 }
