@@ -28,7 +28,7 @@ public struct LocationReminder: Reminder {
     ///   - title: The title displayed in the notification.
     ///   - message: The main body text of the notification.
     ///   - subTitle: An optional subtitle for the notification. Defaults to an empty string.
-    ///   - sound: An optional custom sound to play when the notification is delivered.
+    ///   - sound: An optional custom sound to play when the notification is delivered. Defaults to `.default`.
     ///   - badge: An optional number to display on the app icon.
     ///   - categoryIdentifier: A string used to categorize the notification for custom actions. Defaults to an empty string.
     ///   - userInfo: A dictionary of custom key-value pairs to include with the notification payload. Defaults to an empty dictionary.
@@ -40,7 +40,7 @@ public struct LocationReminder: Reminder {
         title: String,
         message: String,
         subTitle: String = "",
-        sound: ReminderSound? = nil,
+        sound: ReminderSound? = .default,
         badge: Int? = nil,
         categoryIdentifier: String = "",
         userInfo: [String: String] = [:],
