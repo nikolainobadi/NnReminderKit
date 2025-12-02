@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2025-12-02
+
+### Changed
+- All reminder types now play the default system sound by default when the `sound` parameter is not specified
+- Updated default value for `sound` parameter from `nil` to `.default` across all reminder initializers (CountdownReminder, WeekdayReminder, FutureDateReminder, LocationReminder)
+
 ## [1.2.0] - 2025-12-01
 
 ### Added
