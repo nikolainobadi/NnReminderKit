@@ -46,7 +46,7 @@
 Add the following dependency to your `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/nikolainobadi/NnReminderKit", from: "1.2.0")
+.package(url: "https://github.com/nikolainobadi/NnReminderKit", from: "1.3.0")
 ```
 
 ## Usage

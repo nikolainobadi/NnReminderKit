@@ -71,12 +71,26 @@ public struct WeekdayReminder: MultiTriggerReminder {
     public let daysOfWeek: [DayOfWeek]
 
     /// Initializes a `WeekdayReminder` with the given properties.
+    ///
+    /// - Parameters:
+    ///   - id: A unique identifier for the reminder.
+    ///   - title: The title displayed in the notification.
+    ///   - message: The main body text of the notification.
+    ///   - subTitle: An optional subtitle for the notification. Defaults to an empty string.
+    ///   - sound: An optional custom sound to play when the notification is delivered. Defaults to `.default`.
+    ///   - badge: An optional number to display on the app icon.
+    ///   - categoryIdentifier: A string used to categorize the notification for custom actions. Defaults to an empty string.
+    ///   - userInfo: A dictionary of custom key-value pairs to include with the notification payload. Defaults to an empty dictionary.
+    ///   - interruptionLevel: The system-defined importance level of the notification. Defaults to `.active`.
+    ///   - time: The time of day when the notification should fire.
+    ///   - repeating: Whether the reminder repeats after firing. Defaults to `true`.
+    ///   - daysOfWeek: The specific days on which the reminder should repeat.
     public init(
         id: UUID,
         title: String,
         message: String,
         subTitle: String = "",
-        sound: ReminderSound? = nil,
+        sound: ReminderSound? = .default,
         badge: Int? = nil,
         categoryIdentifier: String = "",
         userInfo: [String: String] = [:],
