@@ -12,12 +12,18 @@ let package = Package(
         .library(
             name: "NnReminderKit",
             targets: ["NnReminderKit"]),
+        .library(
+            name: "NnReminderUITestHelpers",
+            targets: ["NnReminderUITestHelpers"]),
     ],
     dependencies: [
     ],
     targets: [
         .target(
             name: "NnReminderKit"),
+        .target(
+            name: "NnReminderUITestHelpers",
+            linkerSettings: [.linkedFramework("XCTest")]),
         .testTarget(
             name: "NnReminderKitTests",
             dependencies: [
