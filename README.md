@@ -22,6 +22,7 @@
   - [Scheduling a Location Reminder](#scheduling-a-location-reminder)
   - [Canceling Reminders](#canceling-reminders)
   - [Loading Pending Reminders](#loading-pending-reminders)
+- [UI Test Helpers](#ui-test-helpers-1)
 - [Architecture Notes](#architecture-notes)
 - [Documentation](#documentation)
 - [About This Project](#about-this-project)
@@ -37,6 +38,7 @@
 - Schedule and manage location-based reminders.
 - Load all pending reminders with detailed metadata.
 - Clean abstraction for unit testing and previewing reminder behavior.
+- UI test helper for dismissing notification permission alerts.
 
 
 ## Installation
@@ -46,7 +48,23 @@
 Add the following dependency to your `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/nikolainobadi/NnReminderKit", from: "1.3.0")
+.package(url: "https://github.com/nikolainobadi/NnReminderKit", from: "1.4.0")
+```
+
+#### Main Library
+
+Add `NnReminderKit` to your app target:
+
+```swift
+.product(name: "NnReminderKit", package: "NnReminderKit")
+```
+
+#### UI Test Helpers
+
+Add `NnReminderUITestHelpers` to your UI test target:
+
+```swift
+.product(name: "NnReminderUITestHelpers", package: "NnReminderKit")
 ```
 
 ## Usage
@@ -283,6 +301,26 @@ Task {
     let oneTimeReminders = await reminderManager.loadAllOneTimeReminders()    // Empty days, not repeating
     let weeklyReminders = await reminderManager.loadAllWeeklyReminders()      // Specific days
 }
+```
+
+## UI Test Helpers
+
+The `NnReminderUITestHelpers` library provides a convenient extension for handling the iOS notification permission alert in UI tests.
+
+```swift
+import NnReminderUITestHelpers
+
+let app = XCUIApplication()
+app.launch()
+
+// Allow notifications (default)
+app.handleNotificationPermissionAlert()
+
+// Explicitly allow
+app.handleNotificationPermissionAlert(.allow)
+
+// Deny notifications
+app.handleNotificationPermissionAlert(.deny)
 ```
 
 ## Architecture Notes

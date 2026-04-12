@@ -73,6 +73,11 @@ xcodebuild test -scheme NnReminderKit -destination 'platform=iOS Simulator,name=
 
 ## Development Notes
 
+**UI Test Helpers** (`Sources/NnReminderUITestHelpers/`)
+- `XCUIApplication+NotificationPermissions`: Extension to dismiss the iOS notification permission alert in UI tests
+- `NotificationPermissionResponse`: Enum for specifying `.allow` or `.deny` actions
+- Separate library product (`NnReminderUITestHelpers`) — consumers add it to their UI test target only
+
 ### Platform Requirements
 - iOS 17.0+ / macOS 12.0+
 - Swift 6.0+
