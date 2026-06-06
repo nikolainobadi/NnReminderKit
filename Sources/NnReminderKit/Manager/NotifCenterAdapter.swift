@@ -32,7 +32,7 @@ extension NotifCenterAdapter: NotifCenter {
     /// - Parameters:
     ///   - request: The `UNNotificationRequest` to be added.
     ///   - completion: A closure that receives an optional error if the operation fails.
-    func add(_ request: UNNotificationRequest, completion: ((Error?) -> Void)?) {
+    func add(_ request: UNNotificationRequest, completion: (@Sendable (Error?) -> Void)?) {
         notifCenter.add(request, withCompletionHandler: completion)
     }
     
@@ -64,10 +64,16 @@ extension NotifCenterAdapter: NotifCenter {
         notifCenter.delegate = delegate
     }
     
+    /// Retrieves all notification requests that are pending delivery.
+    ///
+    /// - Returns: An array of `UNNotificationRequest` objects that have been scheduled but not yet delivered.
     func getPendingNotificationRequests() async -> [UNNotificationRequest] {
         return await notifCenter.pendingNotificationRequests()
     }
-    
+
+    /// Retrieves the current notification authorization status without prompting the user.
+    ///
+    /// - Returns: The `UNAuthorizationStatus` reflecting the app's current notification permissions.
     func getAuthorizationStatus() async -> UNAuthorizationStatus {
         return await notifCenter.notificationSettings().authorizationStatus
     }

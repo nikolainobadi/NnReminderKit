@@ -473,7 +473,7 @@ private extension NnReminderManagerTests {
             addedRequests.insert(request)
         }
         
-        func add(_ request: UNNotificationRequest, completion: ((Error?) -> Void)?) {
+        func add(_ request: UNNotificationRequest, completion: (@Sendable (Error?) -> Void)?) {
             addedRequests.insert(request)
         }
         

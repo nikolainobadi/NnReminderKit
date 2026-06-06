@@ -96,7 +96,7 @@ public extension NnReminderManager {
     /// - Parameters:
     ///   - reminder: The `CountdownReminder` to schedule.
     ///   - completion: A closure receiving an optional error if scheduling fails.
-    func scheduleCountdownReminder(_ reminder: CountdownReminder, completion: ((Error?) -> Void)? = nil) {
+    func scheduleCountdownReminder(_ reminder: CountdownReminder, completion: (@Sendable (Error?) -> Void)? = nil) {
         let request = NotificationRequestFactory.makeCountdownReminderRequest(for: reminder)
         notifCenter.add(request, completion: completion)
     }
@@ -165,7 +165,7 @@ public extension NnReminderManager {
     /// - Parameters:
     ///   - reminder: The `WeekdayReminder` to schedule.
     ///   - completion: A closure receiving an optional error if scheduling fails.
-    func scheduleWeekdayReminder(_ reminder: WeekdayReminder, completion: ((Error?) -> Void)? = nil) {
+    func scheduleWeekdayReminder(_ reminder: WeekdayReminder, completion: (@Sendable (Error?) -> Void)? = nil) {
         for request in NotificationRequestFactory.makeMultiTriggerReminderRequests(for: reminder) {
             notifCenter.add(request, completion: completion)
         }
@@ -398,7 +398,7 @@ public extension NnReminderManager {
     /// - Parameters:
     ///   - reminder: The `LocationReminder` to schedule.
     ///   - completion: A closure receiving an optional error if scheduling fails.
-    func scheduleLocationReminder(_ reminder: LocationReminder, completion: ((Error?) -> Void)? = nil) {
+    func scheduleLocationReminder(_ reminder: LocationReminder, completion: (@Sendable (Error?) -> Void)? = nil) {
         let request = NotificationRequestFactory.makeLocationReminderRequest(for: reminder)
         notifCenter.add(request, completion: completion)
     }
@@ -491,7 +491,7 @@ protocol NotifCenter: Sendable {
     func removePendingNotificationRequests(identifiers: [String])
     func getPendingNotificationRequests() async -> [UNNotificationRequest]
     func setNotificationDelegate(_ delegate: UNUserNotificationCenterDelegate)
-    func add(_ request: UNNotificationRequest, completion: ((Error?) -> Void)?)
+    func add(_ request: UNNotificationRequest, completion: (@Sendable (Error?) -> Void)?)
     func requestAuthorization(options: UNAuthorizationOptions) async throws -> Bool
 }
 
