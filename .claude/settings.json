@@ -1,0 +1,6 @@
+{
+  "enabledPlugins": {
+    "NnReminderKit@nelix-swift-tools": true,
+    "NnTesting@nelix-swift-tools": true
+  }
+}

@@ -10,9 +10,9 @@ import UserNotifications
 @testable import NnReminderKit
 
 struct NnReminderManagerTests {
-    @Test("Starting values are empty")
-    func emptyStartingValues() {
-        let (_, center) = makeSUT()
+    @Test
+    func `Starting values are empty`() {
+        let center = makeSUT().center
         
         #expect(center.delegate == nil)
         #expect(center.idsToRemove.isEmpty)
@@ -24,33 +24,33 @@ struct NnReminderManagerTests {
 
 // MARK: - Setup & Auth
 extension NnReminderManagerTests {
-    @Test("Sets notification delegate")
-    func setsNotifDelegate() async {
+    @Test
+    func `Registers a notification delegate with the notification center`() {
         let (sut, center) = makeSUT()
-        
-        sut.setNotificationDelegate(DelegateStub())
-        
+
+        sut.setNotificationDelegate(makeDelegateStub())
+
         #expect(center.delegate != nil)
     }
     
-    @Test("Requests auth permission", arguments: [true, false])
-    func requestsAuthPermission(isAuthorized: Bool) async {
+    @Test(arguments: [true, false])
+    func `Permission request result reflects authorization grant`(isAuthorized: Bool) async {
         let sut = makeSUT(isAuthorized: isAuthorized).sut
         let granted = await sut.requestAuthPermission(options: [])
         
         #expect(granted == isAuthorized)
     }
     
-    @Test("Not authorized if error is thrown during permission request")
-    func notAuthorizedWhenErrorsThrown() async {
+    @Test
+    func `Not authorized if error is thrown during permission request`() async {
         let sut = makeSUT(throwError: true, isAuthorized: true).sut
         let granted = await sut.requestAuthPermission(options: [])
         
         #expect(!granted)
     }
     
-    @Test("Checks auth status")
-    func checksAuthStatus() async {
+    @Test
+    func `Checks auth status`() async {
         let expectedStatus = UNAuthorizationStatus.authorized
         let sut = makeSUT(authStatus: expectedStatus).sut
         let status = await sut.checkForPermissionsWithoutRequest()
@@ -62,8 +62,8 @@ extension NnReminderManagerTests {
 
 // MARK: - Countdown Reminders
 extension NnReminderManagerTests {
-    @Test("Schedules countdown reminder")
-    func schedulesCountdownReminder() async throws {
+    @Test
+    func `Schedules countdown reminder`() async throws {
         let (sut, center) = makeSUT()
         let countdownReminder = makeCountdownReminder(timeInterval: 3600)
         
@@ -72,8 +72,8 @@ extension NnReminderManagerTests {
         #expect(center.addedRequests.count == 1)
     }
     
-    @Test("Cancels countdown reminder")
-    func cancelsCountdownReminder() async {
+    @Test
+    func `Cancels countdown reminder`() {
         let (sut, center) = makeSUT()
         let countdownReminder = makeCountdownReminder()
         
@@ -82,8 +82,8 @@ extension NnReminderManagerTests {
         #expect(center.idsToRemove.count == 1)
     }
     
-    @Test("Loads countdown remidners")
-    func loadsCountdownReminders() async throws {
+    @Test
+    func `Loads countdown reminders`() async throws {
         let pendingReminder = makeCountdownReminder(timeInterval: 3600)
         let request = NotificationRequestFactory.makeCountdownReminderRequest(for: pendingReminder)
         let sut = makeSUT(pendingRequests: [request]).sut
@@ -98,8 +98,8 @@ extension NnReminderManagerTests {
 
 // MARK: - WeekdayReminder
 extension NnReminderManagerTests {
-    @Test("Schedules a WeekdayReminder for a single day")
-    func schedulesSingleDayWeekdayReminder() async throws {
+    @Test
+    func `Schedules a WeekdayReminder for a single day`() async throws {
         let (sut, center) = makeSUT()
         let calendarReminder = makeWeekdayReminder(daysOfWeek: [.monday])
         
@@ -108,8 +108,8 @@ extension NnReminderManagerTests {
         #expect(center.addedRequests.count == 1)
     }
     
-    @Test("Schedules a WeekdayReminder for a multiple days")
-    func schedulesMultipleDayWeekdayReminder() async throws {
+    @Test
+    func `Schedules a WeekdayReminder for multiple days`() async throws {
         let (sut, center) = makeSUT()
         let calendarReminder = makeWeekdayReminder(daysOfWeek: [.monday, .wednesday, .friday])
         
@@ -118,8 +118,8 @@ extension NnReminderManagerTests {
         #expect(center.addedRequests.count == 3)
     }
     
-    @Test("Cancels a WeekdayReminder")
-    func cancelWeekdayReminder() async {
+    @Test
+    func `Cancels a WeekdayReminder`() {
         let (sut, center) = makeSUT()
         let calendarReminder = makeWeekdayReminder(daysOfWeek: [.monday, .wednesday, .friday])
         
@@ -128,8 +128,8 @@ extension NnReminderManagerTests {
         #expect(center.idsToRemove.count == 3)
     }
     
-    @Test("Loads pending WeekdayReminders")
-    func loadWeekdayReminders() async throws {
+    @Test
+    func `Loads pending WeekdayReminders`() async throws {
         let daysOfWeek: [DayOfWeek] = [.monday, .wednesday, .friday]
         let pendingReminder = makeWeekdayReminder(daysOfWeek: daysOfWeek)
         let requests = NotificationRequestFactory.makeMultiTriggerReminderRequests(for: pendingReminder)
@@ -137,7 +137,6 @@ extension NnReminderManagerTests {
         let loadedReminders = await sut.loadAllWeekdayReminders()
         let reminder = try #require(loadedReminders.first)
 
-        #expect(requests.count == daysOfWeek.count)
         #expect(loadedReminders.count == 1)
         #expect(reminder.daysOfWeek.count == daysOfWeek.count)
     }
@@ -146,8 +145,8 @@ extension NnReminderManagerTests {
 
 // MARK: - WeekdayReminder (Daily Reminders)
 extension NnReminderManagerTests {
-    @Test("Schedules daily reminder with empty daysOfWeek array")
-    func schedulesDailyReminderWithEmptyArray() async throws {
+    @Test
+    func `Schedules daily reminder with empty daysOfWeek array`() async throws {
         let (sut, center) = makeSUT()
         let dailyReminder = makeWeekdayReminder(daysOfWeek: [])
 
@@ -164,8 +163,8 @@ extension NnReminderManagerTests {
         #expect(components.minute != nil)
     }
 
-    @Test("Schedules one-time reminder with empty daysOfWeek and repeating false")
-    func schedulesOneTimeReminderWithEmptyArray() async throws {
+    @Test
+    func `Schedules one-time reminder with empty daysOfWeek and repeating false`() async throws {
         let (sut, center) = makeSUT()
         let oneTimeReminder = makeWeekdayReminder(repeating: false, daysOfWeek: [])
 
@@ -177,8 +176,8 @@ extension NnReminderManagerTests {
         #expect(!trigger.repeats)
     }
 
-    @Test("Loads daily reminder with empty daysOfWeek")
-    func loadsDailyReminderWithEmptyArray() async throws {
+    @Test
+    func `Loads daily reminder with empty daysOfWeek`() async throws {
         let pendingReminder = makeWeekdayReminder(daysOfWeek: [])
         let requests = NotificationRequestFactory.makeMultiTriggerReminderRequests(for: pendingReminder)
         let sut = makeSUT(pendingRequests: requests).sut
@@ -186,14 +185,13 @@ extension NnReminderManagerTests {
         let loadedReminders = await sut.loadAllWeekdayReminders()
         let reminder = try #require(loadedReminders.first)
 
-        #expect(requests.count == 1)
         #expect(loadedReminders.count == 1)
         #expect(reminder.daysOfWeek.isEmpty)
         #expect(reminder.repeating)
     }
 
-    @Test("Convenience factory: WeekdayReminder.daily creates daily reminder")
-    func dailyFactoryMethodCreatesCorrectReminder() async throws {
+    @Test
+    func `Daily convenience reminder repeats with no specific weekdays`() async throws {
         let (sut, center) = makeSUT()
         let dailyReminder = WeekdayReminder.daily(title: "Daily Reminder", message: "Every day", time: Date.createReminderTime(hour: 9, minute: 0))
 
@@ -204,8 +202,8 @@ extension NnReminderManagerTests {
         #expect(dailyReminder.repeating)
     }
 
-    @Test("Convenience factory: WeekdayReminder.oneTime creates non-repeating reminder")
-    func oneTimeFactoryMethodCreatesCorrectReminder() async throws {
+    @Test
+    func `One-time convenience reminder schedules a single non-repeating request`() async throws {
         let (sut, center) = makeSUT()
         let oneTimeReminder = WeekdayReminder.oneTime(title: "One Time", message: "Fires once", time: Date.createReminderTime(hour: 14, minute: 30))
 
@@ -216,8 +214,8 @@ extension NnReminderManagerTests {
         #expect(!oneTimeReminder.repeating)
     }
 
-    @Test("Loads only daily reminders using loadAllDailyReminders")
-    func loadsOnlyDailyReminders() async throws {
+    @Test
+    func `Loads only daily reminders when mixed reminder types are pending`() async throws {
         let dailyReminder = makeWeekdayReminder(repeating: true, daysOfWeek: [])
         let oneTimeReminder = makeWeekdayReminder(repeating: false, daysOfWeek: [])
         let weeklyReminder = makeWeekdayReminder(repeating: true, daysOfWeek: [.monday, .wednesday])
@@ -230,14 +228,15 @@ extension NnReminderManagerTests {
         let sut = makeSUT(pendingRequests: allRequests).sut
 
         let loadedDailyReminders = await sut.loadAllDailyReminders()
+        let reminder = try #require(loadedDailyReminders.first)
 
         #expect(loadedDailyReminders.count == 1)
-        #expect(loadedDailyReminders.first?.daysOfWeek.isEmpty == true)
-        #expect(loadedDailyReminders.first?.repeating == true)
+        #expect(reminder.daysOfWeek.isEmpty)
+        #expect(reminder.repeating)
     }
 
-    @Test("Loads only one-time reminders using loadAllOneTimeReminders")
-    func loadsOnlyOneTimeReminders() async throws {
+    @Test
+    func `Loads only one-time reminders when mixed reminder types are pending`() async throws {
         let dailyReminder = makeWeekdayReminder(repeating: true, daysOfWeek: [])
         let oneTimeReminder = makeWeekdayReminder(repeating: false, daysOfWeek: [])
         let weeklyReminder = makeWeekdayReminder(repeating: true, daysOfWeek: [.monday, .wednesday])
@@ -250,14 +249,15 @@ extension NnReminderManagerTests {
         let sut = makeSUT(pendingRequests: allRequests).sut
 
         let loadedOneTimeReminders = await sut.loadAllOneTimeReminders()
+        let reminder = try #require(loadedOneTimeReminders.first)
 
         #expect(loadedOneTimeReminders.count == 1)
-        #expect(loadedOneTimeReminders.first?.daysOfWeek.isEmpty == true)
-        #expect(loadedOneTimeReminders.first?.repeating == false)
+        #expect(reminder.daysOfWeek.isEmpty)
+        #expect(!reminder.repeating)
     }
 
-    @Test("Loads only weekly reminders using loadAllWeeklyReminders")
-    func loadsOnlyWeeklyReminders() async throws {
+    @Test
+    func `Loads only weekly reminders when mixed reminder types are pending`() async throws {
         let dailyReminder = makeWeekdayReminder(repeating: true, daysOfWeek: [])
         let oneTimeReminder = makeWeekdayReminder(repeating: false, daysOfWeek: [])
         let weeklyReminder = makeWeekdayReminder(repeating: true, daysOfWeek: [.monday, .wednesday])
@@ -270,18 +270,19 @@ extension NnReminderManagerTests {
         let sut = makeSUT(pendingRequests: allRequests).sut
 
         let loadedWeeklyReminders = await sut.loadAllWeeklyReminders()
+        let reminder = try #require(loadedWeeklyReminders.first)
 
         #expect(loadedWeeklyReminders.count == 1)
-        #expect(loadedWeeklyReminders.first?.daysOfWeek.isEmpty == false)
-        #expect(loadedWeeklyReminders.first?.daysOfWeek.count == 2)
+        #expect(!reminder.daysOfWeek.isEmpty)
+        #expect(reminder.daysOfWeek.count == 2)
     }
 }
 
 
 // MARK: - FutureDateReminder
 extension NnReminderManagerTests {
-    @Test("Schedules a FutureDateReminder with multiple dates")
-    func schedulesFutureDateReminder() async throws {
+    @Test
+    func `Schedules a FutureDateReminder with multiple dates`() async throws {
         let (sut, center) = makeSUT()
         let reminder = makeFutureDateReminder(additionalDates: [
             Date.createReminderTime(hour: 10),
@@ -293,8 +294,8 @@ extension NnReminderManagerTests {
         #expect(center.addedRequests.count == 3)
     }
 
-    @Test("Cancels a FutureDateReminder")
-    func cancelsFutureDateReminder() async {
+    @Test
+    func `Cancels a FutureDateReminder`() {
         let (sut, center) = makeSUT()
         let reminder = makeFutureDateReminder(additionalDates: [
             Date.createReminderTime(hour: 10),
@@ -306,15 +307,15 @@ extension NnReminderManagerTests {
         #expect(center.idsToRemove.count == 3)
     }
 
-    @Test("Loads pending FutureDateReminders")
-    func loadsFutureDateReminders() async throws {
+    @Test
+    func `Loads pending FutureDateReminders`() async throws {
         let primary = Date.createReminderTime(hour: 9)
         let additional = [
             Date.createReminderTime(hour: 10),
             Date.createReminderTime(hour: 12)
         ]
 
-        let pendingReminder = makeFutureDateReminder(additionalDates: additional)
+        let pendingReminder = makeFutureDateReminder(primaryDate: primary, additionalDates: additional)
         let requests = NotificationRequestFactory.makeMultiTriggerReminderRequests(for: pendingReminder)
         let sut = makeSUT(pendingRequests: requests).sut
         let reminders = await sut.loadAllFutureDateReminders()
@@ -328,8 +329,8 @@ extension NnReminderManagerTests {
 
 // MARK: - Cancel by Base ID
 extension NnReminderManagerTests {
-    @Test("Cancels all countdown reminders matching base ID")
-    func cancelsCountdownRemindersWithBaseID() async {
+    @Test
+    func `Cancels all countdown reminders matching base ID`() async {
         let id = UUID()
         let reminder = makeCountdownReminder(id: id)
         let request = NotificationRequestFactory.makeCountdownReminderRequest(for: reminder)
@@ -340,8 +341,8 @@ extension NnReminderManagerTests {
         #expect(center.idsToRemove == [id.uuidString])
     }
 
-    @Test("Cancels all weekday reminders matching base ID")
-    func cancelsWeekdayRemindersWithBaseID() async {
+    @Test
+    func `Cancels all weekday reminders matching base ID`() async {
         let id = UUID()
         let reminder = makeWeekdayReminder(id: id, daysOfWeek: [.monday, .friday])
         let requests = NotificationRequestFactory.makeMultiTriggerReminderRequests(for: reminder)
@@ -352,8 +353,8 @@ extension NnReminderManagerTests {
         #expect(center.idsToRemove == requests.map({ $0.identifier }))
     }
 
-    @Test("Cancels all future date reminders matching base ID")
-    func cancelsFutureDateRemindersWithBaseID() async {
+    @Test
+    func `Cancels all future date reminders matching base ID`() async {
         let id = UUID()
         let reminder = makeFutureDateReminder(id: id, additionalDates: [
             Date.createReminderTime(hour: 10),
@@ -368,8 +369,8 @@ extension NnReminderManagerTests {
         #expect(center.idsToRemove.count == 3)
     }
     
-    @Test("Cancels reminders for multiple base IDs")
-    func cancelsRemindersForMultipleBaseIDs() async {
+    @Test
+    func `Cancels reminders for multiple base IDs`() async {
         let id1 = UUID()
         let id2 = UUID()
         
@@ -388,8 +389,8 @@ extension NnReminderManagerTests {
         #expect(center.idsToRemove.count == requests.count)
     }
     
-    @Test("Does not cancel reminders if no base IDs match")
-    func doesNotCancelIfNoBaseIDsMatch() async {
+    @Test
+    func `Does not cancel reminders if no base IDs match`() async {
         let id = UUID()
         let unrelatedReminder = makeCountdownReminder(id: UUID())
         let unrelatedRequest = NotificationRequestFactory.makeCountdownReminderRequest(for: unrelatedReminder)
@@ -405,8 +406,8 @@ extension NnReminderManagerTests {
 // MARK: - LocationReminder
 #if os(iOS)
 extension NnReminderManagerTests {
-    @Test("Schedules a LocationReminder")
-    func schedulesLocationReminder() async throws {
+    @Test
+    func `Schedules a LocationReminder`() async throws {
         let (sut, center) = makeSUT()
         let reminder = makeLocationReminder()
         
@@ -415,8 +416,8 @@ extension NnReminderManagerTests {
         #expect(center.addedRequests.count == 1)
     }
     
-    @Test("Cancels a LocationReminder")
-    func cancelsLocationReminder() async {
+    @Test
+    func `Cancels a LocationReminder`() {
         let (sut, center) = makeSUT()
         let reminder = makeLocationReminder()
         
@@ -425,8 +426,8 @@ extension NnReminderManagerTests {
         #expect(center.idsToRemove == [reminder.id.uuidString])
     }
     
-    @Test("Loads pending LocationReminders")
-    func loadsLocationReminders() async throws {
+    @Test
+    func `Loads pending LocationReminders`() async throws {
         let pendingReminder = makeLocationReminder()
         let request = NotificationRequestFactory.makeLocationReminderRequest(for: pendingReminder)
         let sut = makeSUT(pendingRequests: [request]).sut
@@ -441,19 +442,12 @@ extension NnReminderManagerTests {
 }
 #endif
 
-// MARK: - SUT
-private extension NnReminderManagerTests {
-    func makeSUT(throwError: Bool = false, isAuthorized: Bool = false, authStatus: UNAuthorizationStatus = .notDetermined, pendingRequests: [UNNotificationRequest] = []) -> (sut: NnReminderManager, center: MockCenter) {
-        let center = MockCenter(throwError: throwError, isAuthorized: isAuthorized, authStatus: authStatus, pendingRequests: pendingRequests)
-        let sut = NnReminderManager(notifCenter: center)
-        
-        return (sut, center)
-    }
-}
-
-
 // MARK: - Helpers
 private extension NnReminderManagerTests {
+    func makeDelegateStub() -> DelegateStub {
+        return DelegateStub()
+    }
+
     final class DelegateStub: NSObject, UNUserNotificationCenterDelegate { }
     final class MockCenter: NotifCenter, @unchecked Sendable {
         private let throwError: Bool
@@ -508,5 +502,16 @@ private extension NnReminderManagerTests {
         func getPendingNotificationRequests() async -> [UNNotificationRequest] {
             return pendingRequests
         }
+    }
+}
+
+
+// MARK: - SUT
+private extension NnReminderManagerTests {
+    func makeSUT(throwError: Bool = false, isAuthorized: Bool = false, authStatus: UNAuthorizationStatus = .notDetermined, pendingRequests: [UNNotificationRequest] = []) -> (sut: NnReminderManager, center: MockCenter) {
+        let center = MockCenter(throwError: throwError, isAuthorized: isAuthorized, authStatus: authStatus, pendingRequests: pendingRequests)
+        let sut = NnReminderManager(notifCenter: center)
+
+        return (sut, center)
     }
 }

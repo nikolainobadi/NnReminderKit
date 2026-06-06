@@ -11,9 +11,9 @@ import UserNotifications
 
 @MainActor
 struct ReminderPermissionENVTests {
-    @Test("Starts with .notDetermined status")
-    func startsWithNotDetermined() {
-        let sut = makeSUT().sut
+    @Test
+    func `Starts with .notDetermined status`() {
+        let sut = makeSUT()
         #expect(sut.status == .notDetermined)
     }
 }
@@ -21,49 +21,32 @@ struct ReminderPermissionENVTests {
 
 // MARK: - Permission Checks
 extension ReminderPermissionENVTests {
-    @Test("checkPermissionStatus sets the status correctly")
-    func checkPermissionStatus() async {
+    @Test
+    func `Updates status to the current authorization status when checking permissions`() async {
         let expectedStatus = UNAuthorizationStatus.provisional
-        let sut = makeSUT(authStatus: expectedStatus).sut
+        let sut = makeSUT(authStatus: expectedStatus)
         
         await sut.checkPermissionStatus()
         
         #expect(sut.status == expectedStatus)
     }
     
-    @Test("requestPermission sets .authorized if granted")
-    func requestPermissionAuthorized() async {
-        let sut = makeSUT(isAuthorized: true).sut
+    @Test
+    func `Status becomes authorized when permission is granted`() async {
+        let sut = makeSUT(isAuthorized: true)
         
         await sut.requestPermission()
         
         #expect(sut.status == .authorized)
     }
     
-    @Test("requestPermission sets .denied if not granted")
-    func requestPermissionDenied() async {
-        let sut = makeSUT(isAuthorized: false).sut
+    @Test
+    func `Status becomes denied when permission is not granted`() async {
+        let sut = makeSUT(isAuthorized: false)
         
         await sut.requestPermission()
         
         #expect(sut.status == .denied)
-    }
-}
-
-
-// MARK: - SUT
-private extension ReminderPermissionENVTests {
-    func makeSUT(
-        isAuthorized: Bool = false,
-        authStatus: UNAuthorizationStatus = .notDetermined
-    ) -> (sut: ReminderPermissionENV, delegate: MockPermissionDelegate) {
-        let delegate = MockPermissionDelegate(
-            isAuthorized: isAuthorized,
-            authStatus: authStatus
-        )
-        
-        let sut = ReminderPermissionENV(delegate: delegate, options: [])
-        return (sut, delegate)
     }
 }
 
@@ -86,5 +69,21 @@ private extension ReminderPermissionENVTests {
         func requestAuthPermission(options: UNAuthorizationOptions) async -> Bool {
             return isAuthorized
         }
+    }
+}
+
+
+// MARK: - SUT
+private extension ReminderPermissionENVTests {
+    func makeSUT(
+        isAuthorized: Bool = false,
+        authStatus: UNAuthorizationStatus = .notDetermined
+    ) -> ReminderPermissionENV {
+        let delegate = MockPermissionDelegate(
+            isAuthorized: isAuthorized,
+            authStatus: authStatus
+        )
+
+        return ReminderPermissionENV(delegate: delegate, options: [])
     }
 }
