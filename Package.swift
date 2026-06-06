@@ -6,7 +6,8 @@ import PackageDescription
 let package = Package(
     name: "NnReminderKit",
     platforms: [
-        .iOS(.v17), .macOS(.v14)
+        .iOS(.v17),
+            .macOS(.v14)
     ],
     products: [
         .library(
@@ -15,8 +16,6 @@ let package = Package(
         .library(
             name: "NnReminderUITestHelpers",
             targets: ["NnReminderUITestHelpers"]),
-    ],
-    dependencies: [
     ],
     targets: [
         .target(
