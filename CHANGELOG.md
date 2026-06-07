@@ -7,11 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-06-06
+
 ### Added
 - Opt-in debug logging via a `debugEnabled` flag (default `false`) on `NnReminderManager` initializers and the permission view modifiers (`optionalNotificationPermissionsRequest`, `requiredNotificationPermissionsRequest`). Logs permission, scheduling, canceling, and loading details to the console with an `[NnReminderKit]` prefix. Silent by default.
 
 ### Changed
 - Completion handlers on `scheduleCountdownReminder`, `scheduleWeekdayReminder`, and `scheduleLocationReminder` are now marked `@Sendable`, matching the `UNUserNotificationCenter` contract
+
+## [1.4.0] - 2026-04-12
+
+### Added
+- `NnReminderUITestHelpers` library product for dismissing the iOS notification permission alert in UI tests, including the `XCUIApplication+NotificationPermissions` extension and the `NotificationPermissionResponse` enum (`.allow` / `.deny`)
+- Documentation for the UI test helpers in README and CLAUDE.md
 
 ## [1.3.0] - 2025-12-02
 
@@ -91,3 +99,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Date extensions for easily generating reminder times
 - Abstracted notification center for improved unit testing
 - Comprehensive documentation and examples
+
+[Unreleased]: https://github.com/nikolainobadi/NnReminderKit/compare/1.5.0...HEAD
+[1.5.0]: https://github.com/nikolainobadi/NnReminderKit/compare/1.4.0...1.5.0
+[1.4.0]: https://github.com/nikolainobadi/NnReminderKit/compare/1.3.0...1.4.0
+[1.3.0]: https://github.com/nikolainobadi/NnReminderKit/compare/1.2.0...1.3.0
+[1.2.0]: https://github.com/nikolainobadi/NnReminderKit/compare/1.1.0...1.2.0
+[1.1.0]: https://github.com/nikolainobadi/NnReminderKit/compare/1.0.0...1.1.0
+[1.0.0]: https://github.com/nikolainobadi/NnReminderKit/compare/0.8.0...1.0.0
+[0.8.0]: https://github.com/nikolainobadi/NnReminderKit/compare/0.5.1...0.8.0
+[0.5.1]: https://github.com/nikolainobadi/NnReminderKit/compare/0.5.0...0.5.1
+[0.5.0]: https://github.com/nikolainobadi/NnReminderKit/releases/tag/0.5.0
