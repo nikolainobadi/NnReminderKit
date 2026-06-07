@@ -25,7 +25,6 @@
   - [Debug Logging](#debug-logging)
 - [UI Test Helpers](#ui-test-helpers-1)
 - [Architecture Notes](#architecture-notes)
-- [Documentation](#documentation)
 - [About This Project](#about-this-project)
 - [Contributing](#contributing)
 - [License](#license)
@@ -38,6 +37,7 @@
 - Schedule daily repeating reminders or one-time reminders at specific times.
 - Schedule and manage location-based reminders.
 - Load all pending reminders with detailed metadata.
+- Opt-in debug logging for permission, scheduling, canceling, and loading operations.
 - Clean abstraction for unit testing and previewing reminder behavior.
 - UI test helper for dismissing notification permission alerts.
 
@@ -49,7 +49,7 @@
 Add the following dependency to your `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/nikolainobadi/NnReminderKit", from: "1.4.0")
+.package(url: "https://github.com/nikolainobadi/NnReminderKit", from: "1.5.0")
 ```
 
 #### Main Library
@@ -152,7 +152,7 @@ Task {
 
 ```swift
 let countdownReminder = CountdownReminder(
-    id: "water_reminder",
+    id: UUID(),
     title: "Drink Water",
     message: "Stay hydrated!",
     repeating: false,
@@ -177,7 +177,7 @@ let eveningReminder = Date.createReminderTime(hour: 17, minute: 0)
 
 ```swift
 let reminder = WeekdayReminder(
-    id: "morning_reminder",
+    id: UUID(),
     title: "Morning Reminder",
     message: "Start your day!",
     time: Date.createReminderTime(hour: 8, minute: 30),
@@ -192,7 +192,7 @@ try await reminderManager.scheduleWeekdayReminder(reminder)
 
 ```swift
 let mondayReminder = WeekdayReminder(
-    id: "monday_reminder",
+    id: UUID(),
     title: "Workout",
     message: "Time for your Monday workout!",
     time: Date.createReminderTime(hour: 7, minute: 0),
@@ -201,7 +201,7 @@ let mondayReminder = WeekdayReminder(
 )
 
 let weekendReminder = WeekdayReminder(
-    id: "weekend_reminder",
+    id: UUID(),
     title: "Stretch",
     message: "Weekend stretch reminder!",
     time: Date.createReminderTime(hour: 8, minute: 0),
@@ -281,11 +281,13 @@ try await reminderManager.scheduleLocationReminder(locationReminder)
 ### Canceling Reminders
 
 ```swift
-await reminderManager.cancelCountdownReminder(countdownReminder)
-await reminderManager.cancelWeekdayReminder(calendarReminder)
-await reminderManager.cancelLocationReminder(locationReminder)
-await reminderManager.cancelReminders(identifiers: [idList])
-await reminderManager.cancelAllReminders()
+reminderManager.cancelCountdownReminder(countdownReminder)
+reminderManager.cancelWeekdayReminder(calendarReminder)
+reminderManager.cancelLocationReminder(locationReminder)
+reminderManager.cancelAllReminders()
+
+// Cancel by base identifiers (async — matches against pending requests)
+await reminderManager.cancelReminders(identifiers: [reminder.id])
 ```
 
 ### Loading Pending Reminders
