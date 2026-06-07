@@ -59,18 +59,20 @@ public extension View {
     /// - Parameters:
     ///   - permissionGranted: A binding to track whether permissions are granted (true) or not granted (false).
     ///   - options: The notification authorization options (default: `.alert`, `.badge`, `.sound`).
+    ///   - debugEnabled: Whether debug messages are printed to the console. Defaults to `false`.
     ///   - detailView: A closure returning a view that explains why permissions are beneficial, with a callback to request them.
     ///
     /// - Returns: A modified view that handles optional notification permission requests.
     func optionalNotificationPermissionsRequest<DetailView: View>(
         permissionGranted: Binding<Bool>,
         options: UNAuthorizationOptions = [.alert, .badge, .sound],
+        debugEnabled: Bool = false,
         @ViewBuilder detailView: @escaping (@escaping () -> Void) -> DetailView
     ) -> some View {
         modifier(
             OptionalReminderPermissionViewModifier(
                 permissionGranted: permissionGranted,
-                permissionENV: .init(delegate: NnReminderManager(), options: options),
+                permissionENV: .init(delegate: NnReminderManager(debugEnabled: debugEnabled), options: options, debugEnabled: debugEnabled),
                 detailView: detailView
             )
         )

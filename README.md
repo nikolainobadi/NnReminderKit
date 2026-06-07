@@ -22,6 +22,7 @@
   - [Scheduling a Location Reminder](#scheduling-a-location-reminder)
   - [Canceling Reminders](#canceling-reminders)
   - [Loading Pending Reminders](#loading-pending-reminders)
+  - [Debug Logging](#debug-logging)
 - [UI Test Helpers](#ui-test-helpers-1)
 - [Architecture Notes](#architecture-notes)
 - [Documentation](#documentation)
@@ -302,6 +303,45 @@ Task {
     let weeklyReminders = await reminderManager.loadAllWeeklyReminders()      // Specific days
 }
 ```
+
+### Debug Logging
+
+All operations are silent by default. To see what NnReminderKit is doing under the hood, pass `debugEnabled: true` when creating the manager:
+
+```swift
+let reminderManager = NnReminderManager(debugEnabled: true)
+```
+
+The permission view modifiers accept the same flag:
+
+```swift
+Text("Notifications enabled!")
+    .requiredNotificationPermissionsRequest(
+        debugEnabled: true,
+        detailView: { requestPermission in
+            PermissionExplanationView(action: requestPermission)
+        },
+        deniedView: { settingsURL in
+            PermissionDeniedView(settingsURL: settingsURL)
+        }
+    )
+```
+
+When enabled, permission, scheduling, canceling, and loading details are printed to the console with an `[NnReminderKit]` prefix:
+
+```
+[NnReminderKit] Requesting notification authorization
+[NnReminderKit] Authorization request completed (granted: true)
+[NnReminderKit] Scheduling reminder 'Daily Standup' with 3 notification request(s)
+[NnReminderKit] Adding notification request: B3E5A0F2-1D4C-4F8A-9C6B-2E7D8A1F0C3D_Monday
+[NnReminderKit] Adding notification request: B3E5A0F2-1D4C-4F8A-9C6B-2E7D8A1F0C3D_Wednesday
+[NnReminderKit] Adding notification request: B3E5A0F2-1D4C-4F8A-9C6B-2E7D8A1F0C3D_Friday
+[NnReminderKit] Loading weekday reminders from 3 pending request(s)
+[NnReminderKit] Loaded 1 weekday reminder(s)
+[NnReminderKit] Canceling reminder 'Daily Standup' (3 notification request(s))
+```
+
+Failure paths are logged as well (failed authorization requests include the error reason). Scheduling errors are still thrown or delivered to completion handlers regardless of the debug flag.
 
 ## UI Test Helpers
 

@@ -12,12 +12,18 @@ import UserNotifications
 public final class NnReminderManager {
     /// Notification center dependency for handling notifications.
     private let notifCenter: NotifCenter
-    
+
+    /// Whether debug messages are printed to the console.
+    private let debugEnabled: Bool
+
     /// Initializes `NnReminderManager` with a custom notification center.
     ///
-    /// - Parameter notifCenter: An object conforming to `NotifCenter` to handle notification operations.
-    init(notifCenter: NotifCenter) {
+    /// - Parameters:
+    ///   - notifCenter: An object conforming to `NotifCenter` to handle notification operations.
+    ///   - debugEnabled: Whether debug messages are printed to the console. Defaults to `false`.
+    init(notifCenter: NotifCenter, debugEnabled: Bool = false) {
         self.notifCenter = notifCenter
+        self.debugEnabled = debugEnabled
     }
 }
 
@@ -25,8 +31,10 @@ public final class NnReminderManager {
 // MARK: - Setup
 public extension NnReminderManager {
     /// Default initializer using `NotifCenterAdapter` for interacting with `UserNotifications`.
-    convenience init() {
-        self.init(notifCenter: NotifCenterAdapter())
+    ///
+    /// - Parameter debugEnabled: Whether debug messages are printed to the console. Defaults to `false`.
+    convenience init(debugEnabled: Bool = false) {
+        self.init(notifCenter: NotifCenterAdapter(), debugEnabled: debugEnabled)
     }
     
     /// Sets the delegate for handling notification interactions.
@@ -46,14 +54,27 @@ extension NnReminderManager: PermissionDelegate {
     /// - Returns: `true` if authorization is granted, otherwise `false`.
     @discardableResult
     public func requestAuthPermission(options: UNAuthorizationOptions) async -> Bool {
-        return (try? await notifCenter.requestAuthorization(options: options)) ?? false
+        log("Requesting notification authorization")
+
+        do {
+            let granted = try await notifCenter.requestAuthorization(options: options)
+            log("Authorization request completed (granted: \(granted))")
+            return granted
+        } catch {
+            log("Authorization request failed: \(error.localizedDescription)")
+            return false
+        }
     }
-    
+
     /// Checks the current notification authorization status asynchronously.
     ///
     /// - Returns: The current `UNAuthorizationStatus`.
     public func checkForPermissionsWithoutRequest() async -> UNAuthorizationStatus {
-        return await notifCenter.getAuthorizationStatus()
+        let status = await notifCenter.getAuthorizationStatus()
+
+        log("Current authorization status: \(status.name)")
+
+        return status
     }
 }
 
@@ -61,9 +82,10 @@ extension NnReminderManager: PermissionDelegate {
 public extension NnReminderManager {
     /// Cancels all scheduled reminders.
     func cancelAllReminders() {
+        log("Canceling all pending reminders")
         notifCenter.removeAllPendingNotificationRequests()
     }
-    
+
     /// Cancels all scheduled reminders that share any of the provided base identifiers.
     ///
     /// - Parameter identifiers: An array of UUIDs used to identify reminders for cancellation.
@@ -75,6 +97,7 @@ public extension NnReminderManager {
                 identifiers.contains { uuid in id.hasPrefix(uuid.uuidString) }
             }
 
+        log("Canceling \(matchingIds.count) request(s) matching \(identifiers.count) base identifier(s)")
         notifCenter.removePendingNotificationRequests(identifiers: matchingIds)
     }
 }
@@ -88,6 +111,8 @@ public extension NnReminderManager {
     /// - Throws: An error if scheduling fails.
     func scheduleCountdownReminder(_ reminder: CountdownReminder) async throws {
         let request = NotificationRequestFactory.makeCountdownReminderRequest(for: reminder)
+
+        log("Scheduling countdown reminder '\(reminder.title)' (interval: \(reminder.timeInterval)s, repeating: \(reminder.repeating))")
         try await notifCenter.add(request)
     }
     
@@ -98,23 +123,28 @@ public extension NnReminderManager {
     ///   - completion: A closure receiving an optional error if scheduling fails.
     func scheduleCountdownReminder(_ reminder: CountdownReminder, completion: (@Sendable (Error?) -> Void)? = nil) {
         let request = NotificationRequestFactory.makeCountdownReminderRequest(for: reminder)
+
+        log("Scheduling countdown reminder '\(reminder.title)' (interval: \(reminder.timeInterval)s, repeating: \(reminder.repeating))")
         notifCenter.add(request, completion: completion)
     }
-    
+
     /// Cancels a specific countdown reminder.
     ///
     /// - Parameter reminder: The `CountdownReminder` to cancel.
     func cancelCountdownReminder(_ reminder: CountdownReminder) {
+        log("Canceling countdown reminder '\(reminder.title)'")
         notifCenter.removePendingNotificationRequests(identifiers: [reminder.id.uuidString])
     }
-    
+
     /// Loads all pending countdown reminders asynchronously.
     ///
     /// - Returns: An array of `CountdownReminder` objects.
     func loadAllCountdownReminders() async -> [CountdownReminder] {
         let requests = await notifCenter.getPendingNotificationRequests()
 
-        return requests.compactMap { request in
+        log("Loading countdown reminders from \(requests.count) pending request(s)")
+
+        let reminders: [CountdownReminder] = requests.compactMap { request in
             guard
                 let id = UUID(uuidString: request.identifier),
                 let trigger = request.trigger as? UNTimeIntervalNotificationTrigger
@@ -146,6 +176,10 @@ public extension NnReminderManager {
                 timeInterval: trigger.timeInterval
             )
         }
+
+        log("Loaded \(reminders.count) countdown reminder(s)")
+
+        return reminders
     }
 }
 
@@ -166,23 +200,30 @@ public extension NnReminderManager {
     ///   - reminder: The `WeekdayReminder` to schedule.
     ///   - completion: A closure receiving an optional error if scheduling fails.
     func scheduleWeekdayReminder(_ reminder: WeekdayReminder, completion: (@Sendable (Error?) -> Void)? = nil) {
-        for request in NotificationRequestFactory.makeMultiTriggerReminderRequests(for: reminder) {
+        let requests = NotificationRequestFactory.makeMultiTriggerReminderRequests(for: reminder)
+
+        log("Scheduling weekday reminder '\(reminder.title)' with \(requests.count) notification request(s)")
+
+        for request in requests {
             notifCenter.add(request, completion: completion)
         }
     }
-    
+
     /// Cancels a specific calendar reminder.
     ///
     /// - Parameter reminder: The `WeekdayReminder` to cancel.
     func cancelWeekdayReminder(_ reminder: WeekdayReminder) {
         cancelMultiTriggerReminder(reminder)
     }
-    
+
     /// Loads all pending calendar reminders asynchronously.
     ///
     /// - Returns: An array of `WeekdayReminder` objects.
     func loadAllWeekdayReminders() async -> [WeekdayReminder] {
         let requests = await notifCenter.getPendingNotificationRequests()
+
+        log("Loading weekday reminders from \(requests.count) pending request(s)")
+
         var groupedReminders: [UUID: (reminder: WeekdayReminder, days: Set<DayOfWeek>)] = [:]
 
         for request in requests {
@@ -235,7 +276,7 @@ public extension NnReminderManager {
             }
         }
 
-        return groupedReminders.map { (uuid, tuple) in
+        let reminders = groupedReminders.map { (uuid, tuple) in
             WeekdayReminder(
                 id: uuid,
                 title: tuple.reminder.title,
@@ -251,6 +292,10 @@ public extension NnReminderManager {
                 daysOfWeek: Array(tuple.days)
             )
         }
+
+        log("Loaded \(reminders.count) weekday reminder(s)")
+
+        return reminders
     }
 
     /// Loads all daily repeating reminders (reminders with empty daysOfWeek and repeating = true).
@@ -258,7 +303,11 @@ public extension NnReminderManager {
     /// - Returns: An array of `WeekdayReminder` instances configured as daily repeating reminders.
     func loadAllDailyReminders() async -> [WeekdayReminder] {
         let allReminders = await loadAllWeekdayReminders()
-        return allReminders.filter { $0.daysOfWeek.isEmpty && $0.repeating }
+        let dailyReminders = allReminders.filter { $0.daysOfWeek.isEmpty && $0.repeating }
+
+        log("Loaded \(dailyReminders.count) daily reminder(s)")
+
+        return dailyReminders
     }
 
     /// Loads all one-time reminders (reminders with empty daysOfWeek and repeating = false).
@@ -266,7 +315,11 @@ public extension NnReminderManager {
     /// - Returns: An array of `WeekdayReminder` instances configured as one-time reminders.
     func loadAllOneTimeReminders() async -> [WeekdayReminder] {
         let allReminders = await loadAllWeekdayReminders()
-        return allReminders.filter { $0.daysOfWeek.isEmpty && !$0.repeating }
+        let oneTimeReminders = allReminders.filter { $0.daysOfWeek.isEmpty && !$0.repeating }
+
+        log("Loaded \(oneTimeReminders.count) one-time reminder(s)")
+
+        return oneTimeReminders
     }
 
     /// Loads all weekly reminders (reminders with specific days of the week).
@@ -274,7 +327,11 @@ public extension NnReminderManager {
     /// - Returns: An array of `WeekdayReminder` instances configured for specific weekdays.
     func loadAllWeeklyReminders() async -> [WeekdayReminder] {
         let allReminders = await loadAllWeekdayReminders()
-        return allReminders.filter { !$0.daysOfWeek.isEmpty }
+        let weeklyReminders = allReminders.filter { !$0.daysOfWeek.isEmpty }
+
+        log("Loaded \(weeklyReminders.count) weekly reminder(s)")
+
+        return weeklyReminders
     }
 }
 
@@ -304,6 +361,9 @@ public extension NnReminderManager {
     /// - Returns: An array of `FutureDateReminder` instances reconstructed from the notification center.
     func loadAllFutureDateReminders() async -> [FutureDateReminder] {
         let requests = await notifCenter.getPendingNotificationRequests()
+
+        log("Loading future date reminders from \(requests.count) pending request(s)")
+
         var groupedReminders: [UUID: (reminder: FutureDateReminder, primary: Date?, additional: Set<Date>)] = [:]
 
         for request in requests {
@@ -360,7 +420,7 @@ public extension NnReminderManager {
             }
         }
 
-        return groupedReminders.compactMap { (uuid, tuple) -> FutureDateReminder? in
+        let reminders = groupedReminders.compactMap { (uuid, tuple) -> FutureDateReminder? in
             guard let primaryDate = tuple.primary else { return nil }
 
             return FutureDateReminder(
@@ -377,6 +437,10 @@ public extension NnReminderManager {
                 additionalDates: Array(tuple.additional)
             )
         }
+
+        log("Loaded \(reminders.count) future date reminder(s)")
+
+        return reminders
     }
 }
 
@@ -390,6 +454,8 @@ public extension NnReminderManager {
     /// - Throws: An error if scheduling fails.
     func scheduleLocationReminder(_ reminder: LocationReminder) async throws {
         let request = NotificationRequestFactory.makeLocationReminderRequest(for: reminder)
+
+        log("Scheduling location reminder '\(reminder.title)' (radius: \(reminder.locationRegion.radius)m)")
         try await notifCenter.add(request)
     }
     
@@ -400,23 +466,28 @@ public extension NnReminderManager {
     ///   - completion: A closure receiving an optional error if scheduling fails.
     func scheduleLocationReminder(_ reminder: LocationReminder, completion: (@Sendable (Error?) -> Void)? = nil) {
         let request = NotificationRequestFactory.makeLocationReminderRequest(for: reminder)
+
+        log("Scheduling location reminder '\(reminder.title)' (radius: \(reminder.locationRegion.radius)m)")
         notifCenter.add(request, completion: completion)
     }
-    
+
     /// Cancels a specific location-based reminder.
     ///
     /// - Parameter reminder: The `LocationReminder` to cancel.
     func cancelLocationReminder(_ reminder: LocationReminder) {
+        log("Canceling location reminder '\(reminder.title)'")
         notifCenter.removePendingNotificationRequests(identifiers: [reminder.id.uuidString])
     }
-    
+
     /// Loads all pending location-based reminders asynchronously.
     ///
     /// - Returns: An array of `LocationReminder` objects.
     func loadAllLocationReminders() async -> [LocationReminder] {
         let requests = await notifCenter.getPendingNotificationRequests()
 
-        return requests.compactMap { request in
+        log("Loading location reminders from \(requests.count) pending request(s)")
+
+        let reminders: [LocationReminder] = requests.compactMap { request in
             guard
                 let trigger = request.trigger as? UNLocationNotificationTrigger,
                 let region = trigger.region as? CLCircularRegion,
@@ -454,17 +525,30 @@ public extension NnReminderManager {
                 repeats: trigger.repeats
             )
         }
+
+        log("Loaded \(reminders.count) location reminder(s)")
+
+        return reminders
     }
 }
 #endif
 
 // MARK: - Private Methods
 private extension NnReminderManager {
+    /// Prints a debug message to the console when debug logging is enabled.
+    ///
+    /// - Parameter message: The message to print.
+    func log(_ message: String) {
+        ReminderKitLogger.log(message, isEnabled: debugEnabled)
+    }
+
     /// Cancels all pending notifications associated with a multi-trigger reminder.
     ///
     /// - Parameter reminder: A reminder conforming to `MultiTriggerReminder` whose notifications should be removed.
     func cancelMultiTriggerReminder(_ reminder: any MultiTriggerReminder) {
         let identifiers = reminder.triggers.map({ $0.id })
+
+        log("Canceling reminder '\(reminder.title)' (\(identifiers.count) notification request(s))")
         notifCenter.removePendingNotificationRequests(identifiers: identifiers)
     }
 
@@ -473,7 +557,12 @@ private extension NnReminderManager {
     /// - Parameter reminder: A reminder conforming to `MultiTriggerReminder` to schedule.
     /// - Throws: An error if any notification request fails.
     func scheduleMultiTriggerReminder(_ reminder: any MultiTriggerReminder) async throws {
-        for request in NotificationRequestFactory.makeMultiTriggerReminderRequests(for: reminder) {
+        let requests = NotificationRequestFactory.makeMultiTriggerReminderRequests(for: reminder)
+
+        log("Scheduling reminder '\(reminder.title)' with \(requests.count) notification request(s)")
+
+        for request in requests {
+            log("Adding notification request: \(request.identifier)")
             try await notifCenter.add(request)
         }
     }
