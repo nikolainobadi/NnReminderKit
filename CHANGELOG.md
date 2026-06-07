@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Opt-in debug logging via a `debugEnabled` flag (default `false`) on `NnReminderManager` initializers and the permission view modifiers (`optionalNotificationPermissionsRequest`, `requiredNotificationPermissionsRequest`). Logs permission, scheduling, canceling, and loading details to the console with an `[NnReminderKit]` prefix. Silent by default.
+
+### Changed
+- Completion handlers on `scheduleCountdownReminder`, `scheduleWeekdayReminder`, and `scheduleLocationReminder` are now marked `@Sendable`, matching the `UNUserNotificationCenter` contract
+
 ## [1.3.0] - 2025-12-02
 
 ### Changed

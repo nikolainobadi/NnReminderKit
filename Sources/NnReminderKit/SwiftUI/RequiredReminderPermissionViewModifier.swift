@@ -60,18 +60,20 @@ public extension View {
     ///
     /// - Parameters:
     ///   - options: The notification authorization options (default: `.alert`, `.badge`, `.sound`).
+    ///   - debugEnabled: Whether debug messages are printed to the console. Defaults to `false`.
     ///   - detailView: A closure returning a view that explains why permissions are needed, with a callback to request them.
     ///   - deniedView: A closure returning a view that informs the user permissions were denied, with an optional settings link.
     ///
     /// - Returns: A modified view that requires notification permissions before showing content.
     func requiredNotificationPermissionsRequest<DetailView: View, DeniedView: View>(
         options: UNAuthorizationOptions = [.alert, .badge, .sound],
+        debugEnabled: Bool = false,
         @ViewBuilder detailView: @escaping (@escaping () -> Void) -> DetailView,
         @ViewBuilder deniedView: @escaping (URL?) -> DeniedView
     ) -> some View {
         modifier(
             RequiredReminderPermissionViewModifier(
-                permissionENV: .init(delegate: NnReminderManager(), options: options),
+                permissionENV: .init(delegate: NnReminderManager(debugEnabled: debugEnabled), options: options, debugEnabled: debugEnabled),
                 detailView: detailView,
                 deniedView: deniedView
             )
