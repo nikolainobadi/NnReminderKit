@@ -2,7 +2,7 @@
 
 ![Build Status](https://github.com/nikolainobadi/NnReminderKit/actions/workflows/ci.yml/badge.svg)
 ![Swift Version](https://badgen.net/badge/swift/6.0%2B/purple)
-![Platforms](https://img.shields.io/badge/platforms-iOS%2017%20%2B%20%7C%20macOS%2012%20%2B-blue)
+![Platforms](https://img.shields.io/badge/platforms-iOS%2017%20%2B%20%7C%20macOS%2014%20%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-lightgray)
 
 **NnReminderKit** is a Swift package designed to simplify the scheduling and management of local notifications, including countdown, calendar-based, and location-based reminders. It provides a clean, SwiftUI-friendly API for handling permissions, scheduling, canceling, and loading pending reminders.
@@ -49,7 +49,7 @@
 Add the following dependency to your `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/nikolainobadi/NnReminderKit", from: "1.5.0")
+.package(url: "https://github.com/nikolainobadi/NnReminderKit", from: "1.5.1")
 ```
 
 #### Main Library
@@ -118,24 +118,12 @@ ReminderAppContent()
         deniedView: { settingsURL in
             VStack {
                 Text("Notifications are disabled. Please enable them in settings.")
-                ShowNotificationSettingsButton {
-                    Text("Open Settings")
+                if let settingsURL {
+                    Link("Open Settings", destination: settingsURL)
                 }
             }
         }
     )
-```
-
-#### Standalone Settings Button
-Use the `ShowNotificationSettingsButton` component anywhere in your app:
-
-```swift
-ShowNotificationSettingsButton() // Uses default "Open Settings" text
-
-// Or with custom content:
-ShowNotificationSettingsButton {
-    Label("Notification Settings", systemImage: "gear")
-}
 ```
 
 ### Manual Requesting Notification Permissions

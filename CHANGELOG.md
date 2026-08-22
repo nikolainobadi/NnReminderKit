@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-08-22
+
+### Added
+- `Skills/NnReminderKit/` — the published API reference now lives in this repo and is served through the `nn-swift-skills` marketplace, so it changes in the same PR as the API it documents
+- `skill-docs.yml` workflow: fails a PR that changes the public API without touching `Skills/`; waivable with the `skip-skill-check` label
+- `skill-ref-bump.yml` workflow: points the marketplace entry at the new tag on release
+
+### Fixed
+- CLAUDE.md and the README platform badge stated a macOS 12+ minimum; `Package.swift` declares macOS 14+
+- README documented `ShowNotificationSettingsButton`, a type deleted from `Sources/` in September 2025; replaced the example with the `settingsURL` the `deniedView` closure actually receives
+
 ## [1.5.0] - 2026-06-06
 
 ### Added
@@ -100,7 +111,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Abstracted notification center for improved unit testing
 - Comprehensive documentation and examples
 
-[Unreleased]: https://github.com/nikolainobadi/NnReminderKit/compare/1.5.0...HEAD
+[Unreleased]: https://github.com/nikolainobadi/NnReminderKit/compare/1.5.1...HEAD
+[1.5.1]: https://github.com/nikolainobadi/NnReminderKit/compare/1.5.0...1.5.1
 [1.5.0]: https://github.com/nikolainobadi/NnReminderKit/compare/1.4.0...1.5.0
 [1.4.0]: https://github.com/nikolainobadi/NnReminderKit/compare/1.3.0...1.4.0
 [1.3.0]: https://github.com/nikolainobadi/NnReminderKit/compare/1.2.0...1.3.0
