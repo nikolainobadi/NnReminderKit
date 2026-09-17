@@ -1,0 +1,36 @@
+{
+  "ai" : {
+    "tasks" : [
+      {
+        "id" : "readme",
+        "review" : false,
+        "skill" : "readme-update"
+      },
+      {
+        "id" : "agentDocs",
+        "review" : false,
+        "skill" : "agent-docs-update"
+      },
+      {
+        "id" : "referenceSkill",
+        "review" : false,
+        "skill" : "reference-skill-update"
+      }
+    ]
+  },
+  "releaseBranch" : "main",
+  "targets" : [
+    {
+      "buildSettings" : {
+        "buildCommands" : [
+          "xcodebuild build-for-testing -scheme NnReminderKit-Package -destination 'platform=macOS,arch=arm64'"
+        ],
+        "testCommands" : [
+          "xcodebuild test-without-building -scheme NnReminderKit-Package -destination 'platform=macOS,arch=arm64'"
+        ]
+      },
+      "name" : "NnReminderKit",
+      "projectType" : "libraryPackage"
+    }
+  ]
+}
