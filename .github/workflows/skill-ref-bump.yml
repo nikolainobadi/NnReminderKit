@@ -9,7 +9,7 @@ name: Bump skill ref
 # contents:write and pull-requests:write on the marketplace repo.
 
 #
-# template-version: 3
+# template-version: 4
 #
 # Bumped whenever this file changes. sync-package-workflows.sh compares the stamp in a
 # repo's installed copy against this one, so a repo running an older template is a grep
@@ -108,17 +108,28 @@ jobs:
               skip(f"Already pinned to {tag}.")
 
           # Surgical replacement: a json.dumps round-trip would reformat the whole
-          # manifest and bury the one-line change in noise.
+          # manifest and bury the one-line change in noise. The search is confined to
+          # this skill's entry, because another package can share the same version
+          # number -- a file-wide '"ref": "2.2.1"' matched NnTesting's pin as well.
+          name_line = f'"name": "{skill}"'
+          if text.count(name_line) != 1:
+              sys.exit(f"::error::Could not uniquely locate '{name_line}'; edit by hand.")
+          start = text.index(name_line)
+          next_entry = text.find('"name": "', start + len(name_line))
+          end = len(text) if next_entry == -1 else next_entry
+          span = text[start:end]
+
           if old is None:
               needle = f'"path": "Skills/{skill}"'
-              if text.count(needle) != 1:
+              if span.count(needle) != 1:
                   sys.exit("::error::Could not uniquely locate the path line; edit by hand.")
-              text = text.replace(needle, f'{needle},\n      "ref": "{tag}"')
+              span = span.replace(needle, f'{needle},\n      "ref": "{tag}"')
           else:
               needle = f'"ref": "{old}"'
-              if text.count(needle) != 1:
-                  sys.exit(f"::error::'{needle}' is not unique; edit by hand.")
-              text = text.replace(needle, f'"ref": "{tag}"')
+              if span.count(needle) != 1:
+                  sys.exit(f"::error::'{needle}' is not unique in the '{skill}' entry; edit by hand.")
+              span = span.replace(needle, f'"ref": "{tag}"')
+          text = text[:start] + span + text[end:]
 
           json.loads(text)  # fail loudly rather than commit invalid JSON
           p.write_text(text)
