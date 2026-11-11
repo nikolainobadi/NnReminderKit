@@ -1,9 +1,3 @@
-//
-//  TriggerInfo.swift
-//
-//  Created by Nikolai Nobadi on 3/5/25.
-//
-
 import Foundation
 
 /// Represents a trigger for a scheduled notification.

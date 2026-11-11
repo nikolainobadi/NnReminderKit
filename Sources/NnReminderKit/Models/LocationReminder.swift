@@ -1,10 +1,3 @@
-//
-//  LocationReminder.swift
-//  NnReminderKit
-//
-//  Created by Nikolai Nobadi on 4/25/25.
-//
-
 import UserNotifications
 
 #if os(iOS)

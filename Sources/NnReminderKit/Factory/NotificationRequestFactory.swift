@@ -1,9 +1,3 @@
-//
-//  NotificationRequestFactory.swift
-//
-//  Created by Nikolai Nobadi on 3/6/25.
-//
-
 import Foundation
 import UserNotifications
 

@@ -1,10 +1,3 @@
-//
-//  ReminderKitLogger.swift
-//  NnReminderKit
-//
-//  Created by Nikolai Nobadi on 6/6/26.
-//
-
 import UserNotifications
 
 /// Internal helper for printing debug messages.

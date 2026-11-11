@@ -1,10 +1,3 @@
-//
-//  TriggerInfoFactory.swift
-//  NnReminderKit
-//
-//  Created by Nikolai Nobadi on 4/2/25.
-//
-
 import Foundation
 
 enum TriggerInfoFactory {

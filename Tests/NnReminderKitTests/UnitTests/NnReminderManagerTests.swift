@@ -1,10 +1,3 @@
-//
-//  NnReminderManagerTests.swift
-//  NnReminderKit
-//
-//  Created by Nikolai Nobadi on 4/1/25.
-//
-
 import Testing
 import UserNotifications
 @testable import NnReminderKit
