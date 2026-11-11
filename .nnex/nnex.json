@@ -1,0 +1,17 @@
+{
+  "targets" : [
+    {
+      "name" : "NnReminderKit",
+      "path" : ".",
+      "skills" : [
+        "Skills/NnReminderKit"
+      ],
+      "targetType" : "library",
+      "buildAndTestCommands" : [
+        "swift build",
+        "xcodebuild test -scheme NnReminderKit-Package -destination 'platform=macOS,arch=arm64'",
+        "xcodebuild test -scheme NnReminderKit-Package -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest'"
+      ]
+    }
+  ]
+}
