@@ -1,10 +1,3 @@
-//
-//  DecodedReminderContent.swift
-//  NnReminderKit
-//
-//  Created by Nikolai Nobadi on 4/5/25.
-//
-
 import UserNotifications
 
 struct DecodedReminderContent: Sendable {

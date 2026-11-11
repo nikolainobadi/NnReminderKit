@@ -1,9 +1,3 @@
-//
-//  WeekdayReminder+Extensions.swift
-//
-//  Created by Nikolai Nobadi on 3/7/25.
-//
-
 import Foundation
 import UserNotifications
 

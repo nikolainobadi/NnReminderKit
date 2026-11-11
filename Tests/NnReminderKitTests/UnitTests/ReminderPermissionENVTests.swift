@@ -1,10 +1,3 @@
-//
-//  ReminderPermissionENVTests.swift
-//  NnReminderKit
-//
-//  Created by Nikolai Nobadi on 4/5/25.
-//
-
 import Testing
 import UserNotifications
 @testable import NnReminderKit

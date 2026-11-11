@@ -1,9 +1,3 @@
-//
-//  DayOfWeek.swift
-//
-//  Created by Nikolai Nobadi on 3/7/25.
-//
-
 import Foundation
 
 /// Represents the days of the week as an enumeration.

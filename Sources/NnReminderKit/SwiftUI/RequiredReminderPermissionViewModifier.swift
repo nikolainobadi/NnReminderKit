@@ -1,10 +1,3 @@
-//
-//  RequiredReminderPermissionViewModifier.swift
-//
-//
-//  Created by Nikolai Nobadi on 3/6/25.
-//
-
 import SwiftUI
 import UserNotifications
 
