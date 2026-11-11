@@ -7,7 +7,7 @@ on:
 
 jobs:
   test:
-    runs-on: macos-14
+    runs-on: macos-26
     strategy:
       matrix:
         platform: [iOS, macOS]
@@ -16,8 +16,8 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v7
 
-      - name: Select Xcode 16.2
-        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+      - name: Select Xcode 26.5
+        run: sudo xcode-select -s /Applications/Xcode_26.5.app/Contents/Developer
 
       - name: Display Xcode Version
         run: xcodebuild -version
@@ -42,7 +42,7 @@ jobs:
           if [ "${{ matrix.platform }}" == "iOS" ]; then
             xcodebuild test \
               -scheme NnReminderKit \
-              -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.3.1' \
+              -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' \
               | xcpretty
           else
             xcodebuild test \

@@ -61,7 +61,7 @@ repos means "rotate the shared token", not "this repo's workflow is broken".
 
 ## CI
 
-- GitHub Actions (`ci.yml`) runs iOS and macOS tests in parallel using Xcode 16.2
+- GitHub Actions (`ci.yml`) runs iOS and macOS tests in parallel on `macos-26` using Xcode 26.5
 - Note: backtick raw-identifier test names require Swift 6.2+ (Xcode 26) — CI Xcode version must be kept compatible
 - `skill-docs.yml` runs on every PR (see "The skill lives here")
 - `skill-ref-bump.yml` runs on tag push (see "Releasing")
