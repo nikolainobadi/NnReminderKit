@@ -49,7 +49,7 @@
 Add the following dependency to your `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/nikolainobadi/NnReminderKit", from: "1.5.1")
+.package(url: "https://github.com/nikolainobadi/NnReminderKit", from: "1.5.2")
 ```
 
 #### Main Library
